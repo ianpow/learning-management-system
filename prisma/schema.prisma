@@ -1,0 +1,173 @@
+// /prisma/schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_PRISMA_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            Int       @id @default(autoincrement())
+  email         String    @unique
+  password_hash String
+  first_name    String
+  last_name     String
+  role_id       Int
+  department_id Int
+  location_id   Int
+  manager_id    Int?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  // Relations
+  role         Role        @relation(fields: [role_id], references: [id])
+  department   Department  @relation(fields: [department_id], references: [id])
+  location     Location    @relation(fields: [location_id], references: [id])
+  manager      User?       @relation("UserToManager", fields: [manager_id], references: [id])
+  team_members User[]      @relation("UserToManager")
+  enrollments  CourseEnrollment[]
+  progress     CourseProgress[]
+  certificates Certificate[]
+  notifications     Notification[]
+  created_courses   Course[]   @relation("CreatedBy")
+}
+
+model Role {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  users       User[]
+}
+
+model Department {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  users       User[]
+  courses     Course[]
+}
+
+model Location {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  users       User[]
+}
+
+model Course {
+  id                Int       @id @default(autoincrement())
+  title             String
+  description       String?   @db.Text
+  scorm_package_url String
+  thumbnail_url     String?
+  duration_minutes  Int       @default(0)
+  is_mandatory      Boolean   @default(false)
+  status            String    @default("draft") // draft, active, archived
+  department_id     Int?
+  created_by_id     Int
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  department        Department? @relation(fields: [department_id], references: [id])
+  created_by        User       @relation("CreatedBy", fields: [created_by_id], references: [id])
+  enrollments       CourseEnrollment[]
+  progress          CourseProgress[]
+  certificates      Certificate[]
+  path_courses      PathCourse[]
+}
+
+model CourseEnrollment {
+  id              Int       @id @default(autoincrement())
+  user_id         Int
+  course_id       Int
+  enrollment_type String    // self, assigned
+  enrollment_date DateTime  @default(now())
+  completion_date DateTime?
+  due_date        DateTime?
+  assigned_by_id  Int?
+  learning_path_id Int?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  user            User      @relation(fields: [user_id], references: [id])
+  course          Course    @relation(fields: [course_id], references: [id])
+  learning_path   LearningPath? @relation(fields: [learning_path_id], references: [id])
+  progress        CourseProgress?
+
+  @@unique([user_id, course_id])
+}
+
+model CourseProgress {
+  id                  Int       @id @default(autoincrement())
+  user_id             Int
+  course_id           Int
+  progress_percentage Int       @default(0)
+  last_accessed       DateTime  @default(now())
+  scorm_data          Json?
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
+
+  user                User      @relation(fields: [user_id], references: [id])
+  course              Course    @relation(fields: [course_id], references: [id])
+  enrollment          CourseEnrollment @relation(fields: [user_id, course_id], references: [user_id, course_id])
+
+  @@unique([user_id, course_id])
+}
+
+model Certificate {
+  id                  Int       @id @default(autoincrement())
+  user_id             Int
+  course_id           Int
+  certificate_number  String    @unique
+  issue_date          DateTime  @default(now())
+  pdf_path            String
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
+
+  user                User      @relation(fields: [user_id], references: [id])
+  course              Course    @relation(fields: [course_id], references: [id])
+}
+
+model LearningPath {
+  id              Int       @id @default(autoincrement())
+  name            String
+  description     String?   @db.Text
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  courses         PathCourse[]
+  enrollments     CourseEnrollment[]
+}
+
+model PathCourse {
+  id                Int          @id @default(autoincrement())
+  learning_path_id  Int
+  course_id         Int
+  sequence_order    Int
+  created_at        DateTime     @default(now())
+  updated_at        DateTime     @updatedAt
+
+  learning_path     LearningPath @relation(fields: [learning_path_id], references: [id])
+  course            Course       @relation(fields: [course_id], references: [id])
+
+  @@unique([learning_path_id, sequence_order])
+}
+
+model Notification {
+  id              Int       @id @default(autoincrement())
+  user_id         Int
+  type            String    // course_assigned, course_completed, course_due
+  content         String    @db.Text
+  read            Boolean   @default(false)
+  read_at         DateTime?
+  related_id      Int?      // Optional reference to related entity (course, etc)
+  created_at      DateTime  @default(now())
+  created_by_id   Int?
+
+  user            User      @relation(fields: [user_id], references: [id])
+}
