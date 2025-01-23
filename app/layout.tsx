@@ -1,4 +1,16 @@
-import { Providers } from "./providers"
+// app/layout.tsx
+import './globals.css'
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import DashboardLayout from '@/components/dashboard-ui'
+import { Providers } from './providers'
+
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: 'Learning Management System',
+  description: 'Enterprise Learning Management System'
+}
 
 export default function RootLayout({
   children,
@@ -7,8 +19,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <Providers>{children}</Providers>
+      <body className={inter.className}>
+        <Providers>
+          <DashboardLayout>
+            {children}
+          </DashboardLayout>
+        </Providers>
       </body>
     </html>
   )
