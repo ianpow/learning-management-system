@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { User, Edit, Trash, Plus, Search } from 'lucide-react'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import AddUserModal from '@/components/admin/add-user-modal';
 
 interface User {
   id: number
@@ -20,7 +21,7 @@ export default function UserManagement() {
  const [loading, setLoading] = useState(true)
  const [error, setError] = useState('')
  const [searchTerm, setSearchTerm] = useState('')
- const [showAddUser, setShowAddUser] = useState(false)
+ const [isModalOpen, setIsModalOpen] = useState(false);
 
  useEffect(() => {
    fetchUsers()
@@ -74,11 +75,30 @@ export default function UserManagement() {
            value={searchTerm}
            onChange={(e) => setSearchTerm(e.target.value)}
          />
+         
        </div>
-       <Button onClick={() => setShowAddUser(true)}>
+       <Button onClick={() => setIsModalOpen(true)}>
          <Plus className="h-4 w-4 mr-2" />
          Add User
        </Button>
+       <AddUserModal
+  isOpen={isModalOpen}
+  onClose={() => setIsModalOpen(false)}
+  onSubmit={async (userData) => {
+    try {
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+      if (!response.ok) throw new Error('Failed to add user');
+      await fetchUsers();
+      setIsModalOpen(false);
+    } catch (err) {
+      setError('Failed to add user');
+    }
+  }}
+/>
      </div>
 
      <div className="bg-white shadow rounded-lg">

@@ -21,26 +21,24 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const allUsers = await prisma.user.findMany({
-    select: {
-      id: true,
-      email: true,
-      first_name: true,
-      last_name: true,
-      role: {
-        select: {
-          name: true
-        }
-      },
-      department: {
-        select: {
-          name: true
-        }
+  const [users, departments, locations, roles] = await Promise.all([
+    prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        role: { select: { id: true, name: true } },
+        department: { select: { id: true, name: true } },
+        location: { select: { id: true, name: true } }
       }
-    }
-  });
+    }),
+    prisma.department.findMany(),
+    prisma.location.findMany(),
+    prisma.role.findMany()
+  ]);
 
-  return NextResponse.json(allUsers);
+  return NextResponse.json({ users, departments, locations, roles });
 }
 
 export async function POST(request: Request) {
