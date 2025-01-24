@@ -42,7 +42,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     { icon: GraduationCap, label: 'Learning Paths', path: '/learning-paths' }
   ];
 
-  if (userRole === 'admin') {
+  if (userRole === 'admin') {  // Keep checking for 'admin'
     menuItems.push(
       { icon: Settings, label: 'Admin', path: '/admin' }
     );

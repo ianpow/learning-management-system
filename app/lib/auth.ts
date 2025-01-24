@@ -18,29 +18,30 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) {
           return null
         }
-
+      
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email }
+          where: { email: credentials.email },
+          include: { role: true }
         })
-
+      
         if (!user) {
           return null
         }
-
+      
         const passwordMatch = await bcrypt.compare(
           credentials.password,
           user.password_hash
         )
-
+      
         if (!passwordMatch) {
           return null
         }
-
+      
         return {
           id: user.id.toString(),
           email: user.email,
           name: `${user.first_name} ${user.last_name}`,
-          role: user.role_id.toString()
+          role: user.role.name
         }
       }
     })
