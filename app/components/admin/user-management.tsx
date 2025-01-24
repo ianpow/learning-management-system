@@ -7,12 +7,12 @@ import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 
 interface User {
- id: number
- email: string
- firstName: string
- lastName: string
- role: string
- department: string
+  id: number
+  email: string
+  firstName: string
+  lastName: string
+  role: { name: string }
+  department: { name: string }
 }
 
 export default function UserManagement() {
@@ -27,17 +27,26 @@ export default function UserManagement() {
  }, [])
 
  const fetchUsers = async () => {
-   try {
-     const response = await fetch('/api/users')
-     if (!response.ok) throw new Error('Failed to fetch users')
-     const data = await response.json()
-     setUsers(data)
-   } catch (err) {
-     setError('Failed to load users')
-   } finally {
-     setLoading(false)
-   }
- }
+  try {
+    const response = await fetch('/api/users')
+    if (!response.ok) throw new Error('Failed to fetch users')
+    const data = await response.json()
+    // Transform the data to match interface
+    const transformedUsers = data.map((user: any) => ({
+      id: user.id,
+      email: user.email,
+      firstName: user.first_name,
+      lastName: user.last_name,
+      role: user.role?.name || '',
+      department: user.department?.name || ''
+    }))
+    setUsers(transformedUsers)
+  } catch (err) {
+    setError('Failed to load users')
+  } finally {
+    setLoading(false)
+  }
+}
 
  const handleDeleteUser = async (userId: number) => {
    if (!confirm('Are you sure you want to delete this user?')) return
@@ -94,8 +103,8 @@ export default function UserManagement() {
                <tr key={user.id} className="border-b">
                  <td className="px-6 py-4">{user.firstName} {user.lastName}</td>
                  <td className="px-6 py-4">{user.email}</td>
-                 <td className="px-6 py-4">{user.role}</td>
-                 <td className="px-6 py-4">{user.department}</td>
+                 <td className="px-6 py-4">{user.role.name}</td>
+                 <td className="px-6 py-4">{user.department.name}</td>
                  <td className="px-6 py-4 text-right">
                    <Button 
                      variant="ghost" 
