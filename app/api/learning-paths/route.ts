@@ -1,76 +1,93 @@
-// /app/api/learning-paths/route.ts
+// app/api/learning-paths/route.ts
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-interface LearningPathResponse {
+interface PathFromDB {
   id: number;
-  name: string;
+  title: string;
   description: string;
-  total_courses: number;
-  enrolled_count: number;
-  estimated_hours: number;
-  completion_percentage?: number;
-}
-
-interface PathCourse {
-  course: {
-    duration_minutes: number | null;
-  }
-}
-
-interface PathWithRelations {
-  id: number;
-  name: string;
-  description: string;
-  courses: PathCourse[];
-  enrollments: Array<{
-    progress?: number;
+  courses: Array<{
+    course: {
+      id: number;
+      title: string;
+      duration_minutes: number;
+    };
+    courseEnrollments: Array<{
+      completion_date: Date | null;
+    }>;
   }>;
+ }
+
+interface CourseWithStatus {
+ id: number;
+ title: string;
+ duration_minutes: number;
+ completion_status: 'not_started' | 'in_progress' | 'completed';
 }
 
-export async function GET(request: Request) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+interface LearningPath {
+ id: number;
+ title: string;
+ description: string;
+ courses: CourseWithStatus[];
+ progress: number;
+}
+
+export async function GET() {
+ const session = await getServerSession(authOptions);
+ if (!session?.user?.id) {
+   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+ }
+
+ const paths = await prisma.learningPath.findMany({
+   include: {
+     courses: {
+       include: {
+         course: true,
+         courseEnrollments: {
+           where: {
+             user_id: parseInt(session.user.id)
+           }
+         }
+       }
+     }
+   }
+ });
+
+ const formattedPaths: LearningPath[] = paths.map((path: PathFromDB) => {
+  const coursesWithStatus = path.courses.map((pc: PathFromDB['courses'][0]) => {
+    const enrollment = pc.courseEnrollments[0];
+    let status: 'not_started' | 'in_progress' | 'completed' = 'not_started';
+    
+    if (enrollment?.completion_date) {
+      status = 'completed';
+    } else if (enrollment) {
+      status = 'in_progress';
     }
+ 
+    return {
+      id: pc.course.id,
+      title: pc.course.title,
+      duration_minutes: pc.course.duration_minutes,
+      completion_status: status
+    };
+  });
+ 
+  const completedCourses = coursesWithStatus.filter(
+    (c: CourseWithStatus) => c.completion_status === 'completed'
+  ).length;
+  const progress = Math.round((completedCourses / coursesWithStatus.length) * 100);
+ 
+  return {
+    id: path.id,
+    title: path.title,
+    description: path.description,
+    courses: coursesWithStatus,
+    progress
+  };
+ }); 
 
-    const paths = await prisma.learningPath.findMany({
-      include: {
-        courses: {
-          include: {
-            course: true
-          }
-        },
-        enrollments: {
-          where: {
-            user_id: parseInt(session.user.id)
-          }
-        }
-      }
-    }) as PathWithRelations[];
-
-    const formattedPaths: LearningPathResponse[] = paths.map((path: PathWithRelations) => ({
-      id: path.id,
-      name: path.name,
-      description: path.description,
-      total_courses: path.courses.length,
-      enrolled_count: path.enrollments.length,
-      estimated_hours: path.courses.reduce((total, course) => 
-        total + (course.course.duration_minutes || 0), 0) / 60,
-      completion_percentage: path.enrollments[0]?.progress || undefined
-    }));
-
-    return NextResponse.json(formattedPaths);
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch learning paths' },
-      { status: 500 }
-    );
-  }
+ return NextResponse.json(formattedPaths);
 }

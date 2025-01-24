@@ -1,93 +1,79 @@
-// /app/api/reports/route.ts
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+// app/api/reports/route.ts
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { formatCSVReport, generatePDFReport, groupByMonth } from '@/lib/report-helpers';
 
-interface CoursePopularity {
+interface Course {
   title: string;
-  _count: {
-    enrollments: number;
-  };
-}
-
-interface ReportData {
-  overview: {
-    totalUsers: number;
-    totalCourses: number;
-    completions: number;
-  };
-  coursePopularity: Array<{
-    course: string;
-    enrollments: number;
+  enrollments: Array<{
+    completion_date: Date | null;
   }>;
 }
 
+interface Enrollment {
+  enrollment_date: Date;
+  completion_date: Date | null;
+}
+
+async function fetchReportData(startDate: string | null, endDate: string | null) {
+  const [courses, enrollments] = await Promise.all([
+    prisma.course.findMany({
+      include: { enrollments: true }
+    }) as Promise<Course[]>,
+    prisma.courseEnrollment.findMany({
+      where: {
+        enrollment_date: {
+          gte: startDate ? new Date(startDate) : undefined,
+          lte: endDate ? new Date(endDate) : undefined
+        }
+      }
+    }) as Promise<Enrollment[]>
+  ]);
+
+  return {
+    completionRates: courses.map((course: Course) => ({
+      course: course.title,
+      rate: course.enrollments.length ? 
+        (course.enrollments.filter((e: { completion_date: Date | null }) => e.completion_date).length / course.enrollments.length) * 100 : 0
+    })),
+    monthlyEnrollments: groupByMonth(enrollments)
+  };
+}
+
 export async function GET(request: Request) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.role || !['admin', 'manager'].includes(session.user.role)) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const { searchParams } = new URL(request.url);
-    const startDate = searchParams.get('start_date');
-    const endDate = searchParams.get('end_date');
-    const reportType = searchParams.get('reportType');
-
-    // Fetch basic analytics
-    const [totalUsers, totalCourses, completions] = await Promise.all([
-      prisma.user.count(),
-      prisma.course.count(),
-      prisma.courseEnrollment.count({
-        where: {
-          completion_date: {
-            not: null
-          }
-        }
-      })
-    ]);
-
-    // Fetch course popularity data
-    const coursePopularity = await prisma.course.findMany({
-      select: {
-        title: true,
-        _count: {
-          select: {
-            enrollments: true
-          }
-        }
-      },
-      orderBy: {
-        enrollments: {
-          _count: 'desc'
-        }
-      },
-      take: 5
-    }) as CoursePopularity[];
-
-    // Format the response
-    const report: ReportData = {
-      overview: {
-        totalUsers,
-        totalCourses,
-        completions
-      },
-      coursePopularity: coursePopularity.map(course => ({
-        course: course.title,
-        enrollments: course._count.enrollments
-      }))
-    };
-
-    return NextResponse.json({ report });
-  } catch (error) {
-    console.error('Reports error:', error);
-    return NextResponse.json(
-      { error: 'Failed to generate report' },
-      { status: 500 }
-    );
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.role || !['admin', 'manager'].includes(session.user.role)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const { searchParams } = new URL(request.url);
+  const format = searchParams.get('format');
+  const startDate = searchParams.get('start');
+  const endDate = searchParams.get('end');
+
+  const data = await fetchReportData(startDate, endDate);
+
+  if (format === 'csv') {
+    const csv = formatCSVReport(data);
+    return new NextResponse(csv, {
+      headers: {
+        'Content-Type': 'text/csv',
+        'Content-Disposition': 'attachment; filename=report.csv'
+      }
+    });
+  }
+
+  if (format === 'pdf') {
+    const pdf = await generatePDFReport(data);
+    return new NextResponse(pdf, {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'attachment; filename=report.pdf'
+      }
+    });
+  }
+
+  return NextResponse.json(data);
 }
