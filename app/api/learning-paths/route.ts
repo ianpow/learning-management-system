@@ -46,7 +46,7 @@ export async function GET() {
     courses: {
       include: {
         course: true,
-        enrollment: {
+        enrollments: {
           where: {
             user_id: parseInt(session.user.id)
           }
@@ -54,7 +54,7 @@ export async function GET() {
       }
     }
   }
- });
+});
  
  const formattedPaths: LearningPath[] = paths.map((path: PathFromDB) => {
   const coursesWithStatus = path.courses.map((pc: PathFromDB['courses'][0]) => {

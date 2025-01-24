@@ -98,6 +98,8 @@ model CourseEnrollment {
   course          Course    @relation(fields: [course_id], references: [id])
   learning_path   LearningPath? @relation(fields: [learning_path_id], references: [id])
   progress        CourseProgress?
+  path_course_id Int?
+ pathCourse PathCourse? @relation(fields: [path_course_id], references: [id])
 
   @@unique([user_id, course_id])
 }
@@ -145,17 +147,15 @@ model LearningPath {
 }
 
 model PathCourse {
-  id                Int          @id @default(autoincrement())
-  learning_path_id  Int
-  course_id         Int
-  sequence_order    Int
-  created_at        DateTime     @default(now())
-  updated_at        DateTime     @updatedAt
-
-  learning_path     LearningPath @relation(fields: [learning_path_id], references: [id])
-  course            Course       @relation(fields: [course_id], references: [id])
-
-  @@unique([learning_path_id, sequence_order])
+ id                Int           @id @default(autoincrement())
+ learning_path_id  Int
+ course_id         Int
+ sequence_order    Int
+ enrollments       CourseEnrollment[]
+ learning_path     LearningPath  @relation(fields: [learning_path_id], references: [id])
+ course            Course        @relation(fields: [course_id], references: [id])
+ created_at        DateTime      @default(now())
+ updated_at        DateTime      @updatedAt
 }
 
 model Notification {
