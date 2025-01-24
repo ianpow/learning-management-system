@@ -84,13 +84,13 @@ export default function UserManagement() {
            </tr>
          </thead>
          <tbody>
-           {users
-             .filter(user => 
-               user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               user.email.toLowerCase().includes(searchTerm.toLowerCase())
-             )
-             .map(user => (
+         {users
+  .filter(user => 
+    (user.firstName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (user.lastName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+  )
+  .map(user => (
                <tr key={user.id} className="border-b">
                  <td className="px-6 py-4">{user.firstName} {user.lastName}</td>
                  <td className="px-6 py-4">{user.email}</td>
