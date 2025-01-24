@@ -25,6 +25,7 @@
     "@types/papaparse": "^5.3.15",
     "@vercel/blob": "^0.10.0",
     "bcrypt": "^5.1.0",
+    "clsx": "^2.1.1",
     "cron": "^2.4.0",
     "date-fns": "^2.30.0",
     "fast-xml-parser": "^4.2.5",
@@ -39,6 +40,7 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "recharts": "^2.7.2",
+    "tailwind-merge": "^2.6.0",
     "ws": "^8.13.0"
   },
   "devDependencies": {
