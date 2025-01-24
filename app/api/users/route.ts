@@ -5,20 +5,30 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcrypt';
 
+export interface CreateUserRequest {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  department: string;
+  location: string;
+}
+
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.role || session.user.role !== 'admin') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const users = await prisma.user.findMany({
+  const allUsers = await prisma.user.findMany({
     include: {
       role: true,
       department: true
     }
   });
 
-  return NextResponse.json(users);
+  return NextResponse.json(allUsers);
 }
 
 export async function POST(request: Request) {
@@ -27,17 +37,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const data = await request.json();
-  const hashedPassword = await bcrypt.hash(data.password, 10);
+  const requestData: CreateUserRequest = await request.json();
+  const hashedPassword = await bcrypt.hash(requestData.password, 10);
 
   const user = await prisma.user.create({
     data: {
-      email: data.email,
+      email: requestData.email,
       password_hash: hashedPassword,
-      first_name: data.firstName,
-      last_name: data.lastName,
-      role_id: parseInt(data.role),
-      department_id: parseInt(data.department)
+      first_name: requestData.firstName,
+      last_name: requestData.lastName,
+      role_id: parseInt(requestData.role),
+      department_id: parseInt(requestData.department),
+      location_id: parseInt(requestData.location)
     }
   });
 
