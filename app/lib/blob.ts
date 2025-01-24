@@ -1,4 +1,4 @@
-import { put, del } from '@vercel/blob';
+import { put } from '@vercel/blob';
 
 export async function uploadToBlob(file: File, prefix: string = '') {
   try {
@@ -14,7 +14,10 @@ export async function uploadToBlob(file: File, prefix: string = '') {
 
 export async function deleteFromBlob(url: string) {
   try {
-    await del(url);
+    const response = await fetch(url, { method: 'DELETE' });
+    if (!response.ok) {
+      throw new Error(`Failed to delete: ${response.statusText}`);
+    }
   } catch (error) {
     console.error('Error deleting from blob storage:', error);
     throw error;
