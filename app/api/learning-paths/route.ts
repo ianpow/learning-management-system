@@ -14,9 +14,9 @@ interface PathFromDB {
       title: string;
       duration_minutes: number;
     };
-    enrollment?: {
+    enrollments: Array<{
       completion_date: Date | null;
-    } | null;
+    }>;
   }>;
  }
 
@@ -42,27 +42,39 @@ export async function GET() {
  }
 
  const paths = await prisma.learningPath.findMany({
-  include: {
+  select: {
+    id: true,
+    title: true,
+    description: true,
     courses: {
-      include: {
-        course: true,
+      select: {
+        course: {
+          select: {
+            id: true,
+            title: true,
+            duration_minutes: true
+          }
+        },
         enrollments: {
           where: {
             user_id: parseInt(session.user.id)
+          },
+          select: {
+            completion_date: true
           }
         }
       }
     }
   }
-});
+ }) as unknown as PathFromDB[];
  
  const formattedPaths: LearningPath[] = paths.map((path: PathFromDB) => {
   const coursesWithStatus = path.courses.map((pc: PathFromDB['courses'][0]) => {
     let status: 'not_started' | 'in_progress' | 'completed' = 'not_started';
     
-    if (pc.enrollment?.completion_date) {
+    if (pc.enrollments[0]?.completion_date) {
       status = 'completed';
-    } else if (pc.enrollment) {
+    } else if (pc.enrollments.length > 0) {
       status = 'in_progress';
     }
  
