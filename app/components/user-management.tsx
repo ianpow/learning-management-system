@@ -73,15 +73,14 @@ const UserManagement = () => {
       const response = await fetch('/api/users');
       if (!response.ok) throw new Error('Failed to fetch users');
       const data = await response.json();
-      console.log('Users:', data);
-      setUserData({ 
-        users: data, 
-        departments: [],
-        locations: [],
-        roles: []
+      setUserData({
+        users: data || [],
+        departments: [], // Will need to fetch these later
+        locations: [],  // Will need to fetch these later
+        roles: []       // Will need to fetch these later
       });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load users');
+    } catch (error) {
+      setError('Failed to load users');
     } finally {
       setLoading(false);
     }
