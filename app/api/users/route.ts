@@ -51,8 +51,6 @@ export async function POST(request: Request) {
 
   const requestData: CreateUserRequest = await request.json();
   const hashedPassword = await bcrypt.hash(requestData.password, 10);
-  const session = await getServerSession(authOptions);
-console.log('Session:', session); // Debug session data
 
   const user = await prisma.user.create({
     data: {
