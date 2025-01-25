@@ -74,16 +74,14 @@ const fetchUsers = async () => {
     const response = await fetch('/api/users');
     if (!response.ok) throw new Error('Failed to fetch users');
     const data = await response.json();
-    console.log('Raw user data:', data); // Add this
     setUserData({
-      users: data || [],
+      users: data,
       departments: [],
       locations: [],
       roles: []
     });
-  } catch (error) {
-    console.error('Fetch error:', error); // Add this
-    setError('Failed to load users');
+  } catch (err) {
+    setError(err instanceof Error ? err.message : 'Failed to load users');
   } finally {
     setLoading(false);
   }
@@ -126,15 +124,18 @@ const fetchUsers = async () => {
     </Alert>;
   }
 
-  const filteredUsers = userData?.users?.filter(user => {
-    if (!user?.first_name || !user?.last_name || !user?.email) return false;
-    
+  const filteredUsers = userData?.users.filter(user => {
     const searchMatch = 
-      user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()));
   
-    return searchMatch;
+    const filterMatch = 
+      (!filters.department || user.department.id.toString() === filters.department) &&
+      (!filters.location || user.location.id.toString() === filters.location) &&
+      (!filters.role || user.role.id.toString() === filters.role);
+  
+    return searchMatch && filterMatch;
   }) || [];
   
   return (
