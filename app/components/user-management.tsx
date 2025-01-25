@@ -118,19 +118,19 @@ const UserManagement = () => {
     </Alert>;
   }
 
-  const filteredUsers = userData.users.filter(user => {
-    const matchesSearch = 
-      user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredUsers = userData?.users.filter(user => {
+    const searchMatch = 
+      (user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesFilters = 
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()));
+  
+    const filterMatch = 
       (!filters.department || user.department.id.toString() === filters.department) &&
       (!filters.location || user.location.id.toString() === filters.location) &&
       (!filters.role || user.role.id.toString() === filters.role);
-
-    return matchesSearch && matchesFilters;
-  });
+  
+    return searchMatch && filterMatch;
+  }) || [];
 
   return (
     <div className="space-y-6">

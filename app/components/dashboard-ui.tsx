@@ -51,13 +51,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   return (
     <div className="flex h-screen bg-gray-100">
       <div className={`bg-white shadow-lg ${isSidebarOpen ? 'w-64' : 'w-20'} transition-all duration-300`}>
-        <div className="p-4">
-          <img 
-            src="/api/placeholder/150/50" 
-            alt="Logo" 
-            className="mx-auto h-12"
-          />
-        </div>
+      <div className="p-4">
+  {/* Remove or replace placeholder with actual logo */}
+  <h1 className="text-xl font-bold text-center">LMS Dashboard</h1>
+</div>
         <nav className="mt-8">
           {menuItems.map((item, index) => (
             <button
