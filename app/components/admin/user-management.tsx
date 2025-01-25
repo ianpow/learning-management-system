@@ -8,20 +8,24 @@ import { Button } from '@/components/ui/button'
 import AddUserModal from '@/components/admin/add-user-modal';
 
 interface User {
-  id: number
-  email: string
-  firstName: string
-  lastName: string
-  role: { name: string }
-  department: { name: string }
+  id: number;
+  email: string;
+  first_name: string;  // Changed from firstName
+  last_name: string;   // Changed from lastName
+  role: { name: string };
+  department: { name: string };
+}
+
+interface UserData {
+  users: User[];
 }
 
 export default function UserManagement() {
- const [users, setUsers] = useState<User[]>([])
- const [loading, setLoading] = useState(true)
- const [error, setError] = useState('')
- const [searchTerm, setSearchTerm] = useState('')
- const [isModalOpen, setIsModalOpen] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
  useEffect(() => {
    fetchUsers()
@@ -114,14 +118,14 @@ export default function UserManagement() {
          </thead>
          <tbody>
          {users
-  .filter(user => 
-    (user.firstName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (user.lastName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-  )
+.filter(user => 
+  user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  user.email.toLowerCase().includes(searchTerm.toLowerCase())
+)
   .map(user => (
                <tr key={user.id} className="border-b">
-                 <td className="px-6 py-4">{user.firstName} {user.lastName}</td>
+                 <td className="px-6 py-4">{user.first_name} {user.last_name}</td>
                  <td className="px-6 py-4">{user.email}</td>
                  <td className="px-6 py-4">{user.role.name}</td>
                  <td className="px-6 py-4">{user.department.name}</td>
