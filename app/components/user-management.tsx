@@ -124,17 +124,14 @@ const UserManagement = () => {
   }
 
   const filteredUsers = userData?.users?.filter(user => {
+    if (!user?.first_name || !user?.last_name || !user?.email) return false;
+    
     const searchMatch = 
-      (user?.first_name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
-      user?.last_name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
-      user?.email?.toLowerCase()?.includes(searchTerm.toLowerCase())) ?? false;
+      user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
   
-    const filterMatch = 
-      (!filters.department || user?.department?.id?.toString() === filters.department) &&
-      (!filters.location || user?.location?.id?.toString() === filters.location) &&
-      (!filters.role || user?.role?.id?.toString() === filters.role);
-  
-    return searchMatch && filterMatch;
+    return searchMatch;
   }) || [];
   
   return (
