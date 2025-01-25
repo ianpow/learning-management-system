@@ -118,20 +118,20 @@ const UserManagement = () => {
     </Alert>;
   }
 
-  const filteredUsers = userData?.users.filter(user => {
+  const filteredUsers = userData?.users?.filter(user => {
     const searchMatch = 
-      (user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()));
+      (user?.first_name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+      user?.last_name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+      user?.email?.toLowerCase()?.includes(searchTerm.toLowerCase())) ?? false;
   
     const filterMatch = 
-      (!filters.department || user.department.id.toString() === filters.department) &&
-      (!filters.location || user.location.id.toString() === filters.location) &&
-      (!filters.role || user.role.id.toString() === filters.role);
+      (!filters.department || user?.department?.id?.toString() === filters.department) &&
+      (!filters.location || user?.location?.id?.toString() === filters.location) &&
+      (!filters.role || user?.role?.id?.toString() === filters.role);
   
     return searchMatch && filterMatch;
   }) || [];
-
+  
   return (
     <div className="space-y-6">
       <div className="bg-white p-6 rounded-lg shadow">
