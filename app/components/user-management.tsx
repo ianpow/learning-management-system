@@ -63,28 +63,31 @@ const UserManagement = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+// In user-management.tsx
+useEffect(() => {
+  fetchUsers();
+}, []);
 
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/users');
-      if (!response.ok) throw new Error('Failed to fetch users');
-      const data = await response.json();
-      setUserData({
-        users: data || [],
-        departments: [], // Will need to fetch these later
-        locations: [],  // Will need to fetch these later
-        roles: []       // Will need to fetch these later
-      });
-    } catch (error) {
-      setError('Failed to load users');
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchUsers = async () => {
+  try {
+    setLoading(true);
+    const response = await fetch('/api/users');
+    if (!response.ok) throw new Error('Failed to fetch users');
+    const data = await response.json();
+    console.log('Raw user data:', data); // Add this
+    setUserData({
+      users: data || [],
+      departments: [],
+      locations: [],
+      roles: []
+    });
+  } catch (error) {
+    console.error('Fetch error:', error); // Add this
+    setError('Failed to load users');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleDeleteUser = async (userId: number) => {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
