@@ -112,11 +112,13 @@ export default function UserManagement() {
           </thead>
           <tbody>
             {users
-              .filter(user => 
-                user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                user.email.toLowerCase().includes(searchTerm.toLowerCase())
-              )
+.filter(user => 
+  user.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  user.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  user.role?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  user.department?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+)
               .map(user => (
                 <tr key={user.id} className="border-b">
                   <td className="px-6 py-4">{user.first_name} {user.last_name}</td>

@@ -1,24 +1,24 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Dialog } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface AddUserModalProps {
- isOpen: boolean
- onClose: () => void
- onSubmit: (userData: UserData) => void
+  open: boolean  // changed from isOpen
+  onOpenChange: (open: boolean) => void  // changed from onClose
+  onSubmit: (userData: UserData) => void
 }
 
 interface UserData {
- email: string
- firstName: string
- lastName: string
- role: string
- department: string
- location: string
- password: string
+  email: string
+  first_name: string
+  last_name: string
+  role_id: string
+  department_id: string
+  location_id: string
+  password: string
 }
 
 interface Role {
@@ -36,16 +36,17 @@ interface Location {
  name: string
 }
 
-export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModalProps) {
- const [userData, setUserData] = useState<UserData>({
-   email: '',
-   firstName: '',
-   lastName: '',
-   role: '',
-   department: '',
-   location: '',
-   password: ''
- })
+export default function AddUserModal({ open, onOpenChange, onSubmit }: AddUserModalProps) {
+
+const [userData, setUserData] = useState<UserData>({
+  email: '',
+  first_name: '',     // update these to match
+  last_name: '',      // the new interface
+  role_id: '',
+  department_id: '',
+  location_id: '',
+  password: ''
+});
 
  const [roles, setRoles] = useState<Role[]>([])
  const [departments, setDepartments] = useState<Department[]>([])
@@ -79,19 +80,22 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
      }
    }
 
-   if (isOpen) {
+   if (open) {
      fetchData()
    }
- }, [isOpen])
+ }, [open])
 
  const handleSubmit = (e: React.FormEvent) => {
    e.preventDefault()
    onSubmit(userData)
-   onClose()
+   close()
  }
 
  return (
-   <Dialog open={isOpen} onOpenChange={onClose}>
+  <Dialog 
+    open={open} 
+    onOpenChange={onOpenChange}
+  >
      <div className="p-6 w-[500px]">
        <h2 className="text-lg font-semibold mb-4">Add New User</h2>
        
@@ -120,8 +124,9 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
                type="text"
                required
                className="w-full p-2 border rounded"
-               value={userData.firstName}
-               onChange={e => setUserData({...userData, firstName: e.target.value})}
+               value={userData.first_name}
+               onChange={e => setUserData({...userData, first_name: e.target.value})}  // instead of firstName
+
              />
            </div>
            <div>
@@ -130,8 +135,8 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
                type="text"
                required
                className="w-full p-2 border rounded"
-               value={userData.lastName}
-               onChange={e => setUserData({...userData, lastName: e.target.value})}
+               value={userData.last_name}
+               onChange={e => setUserData({...userData, last_name: e.target.value})}   // instead of lastName
              />
            </div>
          </div>
@@ -142,8 +147,8 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
              <select
                required
                className="w-full p-2 border rounded"
-               value={userData.role}
-               onChange={e => setUserData({...userData, role: e.target.value})}
+               value={userData.role_id}
+               onChange={e => setUserData({...userData, role_id: e.target.value})}     // instead of role
              >
                <option value="">Select Role</option>
                {roles.map(role => (
@@ -158,8 +163,8 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
              <select
                required
                className="w-full p-2 border rounded"
-               value={userData.department}
-               onChange={e => setUserData({...userData, department: e.target.value})}
+               value={userData.department_id}
+               onChange={e => setUserData({...userData, department_id: e.target.value})} // instead of department
              >
                <option value="">Select Department</option>
                {departments.map(dept => (
@@ -176,8 +181,8 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
            <select
              required
              className="w-full p-2 border rounded"
-             value={userData.location}
-             onChange={e => setUserData({...userData, location: e.target.value})}
+             value={userData.location_id}
+             onChange={e => setUserData({...userData, location_id: e.target.value})}  // for location
            >
              <option value="">Select Location</option>
              {locations.map(loc => (
@@ -200,7 +205,7 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
          </div>
 
          <div className="flex justify-end space-x-2">
-           <Button variant="ghost" onClick={onClose}>Cancel</Button>
+           <Button variant="ghost" onClick={close}>Cancel</Button>
            <Button type="submit">Add User</Button>
          </div>
        </form>

@@ -6,6 +6,7 @@ import { Upload, AlertCircle, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import Papa from 'papaparse';
 import { ParseResult } from 'papaparse';
+import { Button } from '@/components/ui/button';
 
 interface User {
  email: string;
@@ -135,6 +136,26 @@ const BulkUserManager = () => {
            )}
          </div>
 
+         <div className="flex justify-between items-center mb-4">
+  <h2 className="text-xl font-bold">Bulk User Import</h2>
+  <Button
+onClick={async () => {
+  const response = await fetch('/api/users/bulk-import/template');  // Updated path
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'user-import-template.csv';
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+}}
+  >
+    Download Template
+  </Button>
+</div>
+
          {preview && preview.length > 0 && (
            <div>
              <h3 className="text-lg font-semibold mb-2">Preview</h3>
@@ -178,22 +199,23 @@ const BulkUserManager = () => {
              </div>
 
              <div className="mt-4 flex justify-end space-x-2">
-               <button
-                 onClick={() => {
-                   setPreview(null);
-                   setFile(null);
-                 }}
-                 className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
-               >
-                 Cancel
-               </button>
-               <button
-                 onClick={handleImport}
-                 disabled={importing}
-                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-               >
-                 {importing ? 'Importing...' : 'Import Users'}
-               </button>
+             <Button
+            onClick={() => {
+              setPreview(null);
+              setFile(null);
+            }}
+            variant="ghost"
+            className="text-gray-700"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleImport}
+            disabled={importing}
+            className="bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            {importing ? 'Importing...' : 'Import Users'}
+          </Button>
              </div>
            </div>
          )}

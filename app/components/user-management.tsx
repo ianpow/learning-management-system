@@ -10,6 +10,8 @@ import {
   RefreshCw 
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import AddUserModal from '@/components/admin/add-user-modal';
 
 interface Department {
   id: number;
@@ -63,29 +65,43 @@ const UserManagement = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-// In user-management.tsx
-useEffect(() => {
-  fetchUsers();
-}, []);
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
-const fetchUsers = async () => {
-  try {
-    setLoading(true);
-    const response = await fetch('/api/users');
-    if (!response.ok) throw new Error('Failed to fetch users');
-    const data = await response.json();
-    setUserData({
-      users: data,
-      departments: [],
-      locations: [],
-      roles: []
-    });
-  } catch (err) {
-    setError(err instanceof Error ? err.message : 'Failed to load users');
-  } finally {
-    setLoading(false);
-  }
-};
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const [usersRes, deptsRes, rolesRes, locsRes] = await Promise.all([
+        fetch('/api/users'),
+        fetch('/api/departments'),
+        fetch('/api/roles'),
+        fetch('/api/locations')
+      ]);
+
+      if (!usersRes.ok || !deptsRes.ok || !rolesRes.ok || !locsRes.ok) {
+        throw new Error('Failed to fetch data');
+      }
+
+      const [users, departments, roles, locations] = await Promise.all([
+        usersRes.json(),
+        deptsRes.json(),
+        rolesRes.json(),
+        locsRes.json()
+      ]);
+
+      setUserData({
+        users,
+        departments,
+        roles,
+        locations
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load users');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDeleteUser = async (userId: number) => {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
@@ -124,11 +140,11 @@ const fetchUsers = async () => {
     </Alert>;
   }
 
-  const filteredUsers = userData?.users.filter(user => {
+  const filteredUsers = userData.users.filter(user => {
     const searchMatch = 
-      (user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()));
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
   
     const filterMatch = 
       (!filters.department || user.department.id.toString() === filters.department) &&
@@ -136,26 +152,25 @@ const fetchUsers = async () => {
       (!filters.role || user.role.id.toString() === filters.role);
   
     return searchMatch && filterMatch;
-  }) || [];
+  });
   
   return (
     <div className="space-y-6">
       <div className="bg-white p-6 rounded-lg shadow">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold">User Management</h2>
-          <button
+          <Button
             onClick={() => {
               setSelectedUser(null);
               setIsModalOpen(true);
             }}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="bg-blue-600 text-white hover:bg-blue-700"
           >
-            <UserPlus className="inline-block h-4 w-4 mr-2" />
+            <UserPlus className="h-4 w-4 mr-2" />
             Add User
-          </button>
+          </Button>
         </div>
 
-        {/* Search and Filters */}
         <div className="mb-6">
           <div className="flex space-x-4">
             <div className="flex-1">
@@ -170,20 +185,121 @@ const fetchUsers = async () => {
                 />
               </div>
             </div>
-            {/* Filter Dropdowns */}
-            {/* ... Rest of the filtering UI ... */}
+            <select
+              value={filters.department}
+              onChange={(e) => setFilters(prev => ({ ...prev, department: e.target.value }))}
+              className="border rounded px-3 py-2"
+            >
+              <option value="">All Departments</option>
+              {userData.departments.map(dept => (
+                <option key={dept.id} value={dept.id}>
+                  {dept.name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filters.role}
+              onChange={(e) => setFilters(prev => ({ ...prev, role: e.target.value }))}
+              className="border rounded px-3 py-2"
+            >
+              <option value="">All Roles</option>
+              {userData.roles.map(role => (
+                <option key={role.id} value={role.id}>
+                  {role.name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filters.location}
+              onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
+              className="border rounded px-3 py-2"
+            >
+              <option value="">All Locations</option>
+              {userData.locations.map(loc => (
+                <option key={loc.id} value={loc.id}>
+                  {loc.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* User Table */}
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            {/* ... Table implementation ... */}
+            <thead>
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Email
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Role
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Department
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Location
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredUsers.map((user) => (
+                <tr key={user.id}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {user.first_name} {user.last_name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {user.email}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {user.role.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {user.department.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {user.location.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteUser(user.id)}
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
       </div>
 
-      {/* User Modal would be imported and used here */}
+      <AddUserModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        onSubmit={async (userData) => {
+          try {
+            const response = await fetch('/api/users', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(userData)
+            });
+            if (!response.ok) throw new Error('Failed to add user');
+            await fetchUsers();
+            setIsModalOpen(false);
+          } catch (err) {
+            setError('Failed to add user');
+          }
+        }}
+      />
     </div>
   );
 };
