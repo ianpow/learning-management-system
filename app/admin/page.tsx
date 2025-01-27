@@ -4,6 +4,7 @@
 import { useState } from 'react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import UserManagement from '@/components/admin/user-management'
+import BulkUserUpload from '@/components/bulk-user-manager'
 import CourseUpload from '@/components/admin/course-upload'
 import Reports from '@/components/admin/reports'
 
@@ -14,11 +15,15 @@ export default function AdminPage() {
       <Tabs defaultValue="users">
         <TabsList>
           <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="bulk">Bulk Upload</TabsTrigger>
           <TabsTrigger value="courses">Courses</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
         <TabsContent value="users">
           <UserManagement />
+        </TabsContent>
+        <TabsContent value="bulk">
+          <BulkUserUpload />
         </TabsContent>
         <TabsContent value="courses">
           <CourseUpload />
