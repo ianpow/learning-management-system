@@ -1,0 +1,180 @@
+Folder PATH listing
+Volume serial number is 5C99-1AE4
+C:.
+¦   favicon.ico
+¦   globals.css
+¦   layout.tsx
+¦   page.tsx
+¦   providers.tsx
+¦   tree2.txt
+¦   
++---admin
+¦   ¦   page.tsx
+¦   ¦   
+¦   +---courses
+¦   ¦   +---assign
+¦   ¦           page.tsx
+¦   ¦           
+¦   +---users
+¦       +---bulk
+¦           ¦   page.tsx
+¦           ¦   
+¦           +---courses
+¦           ¦   +---upload
+¦           ¦           page.tsx
+¦           ¦           
+¦           +---users
+¦                   page.tsx
+¦                   
++---analytics
+¦       page.tsx
+¦       
++---api
+¦   +---analytics
+¦   ¦       route.ts
+¦   ¦       
+¦   +---auth
+¦   ¦   +---[...nextauth]
+¦   ¦           route.ts
+¦   ¦           
+¦   +---courses
+¦   ¦   ¦   route.ts
+¦   ¦   ¦   
+¦   ¦   +---assign
+¦   ¦   ¦       route.ts
+¦   ¦   ¦       
+¦   ¦   +---enrollment-status
+¦   ¦   ¦       route.ts
+¦   ¦   ¦       
+¦   ¦   +---metadata
+¦   ¦   ¦       route.ts
+¦   ¦   ¦       
+¦   ¦   +---[id]
+¦   ¦       ¦   route.ts
+¦   ¦       ¦   
+¦   ¦       +---complete
+¦   ¦       ¦       route.ts
+¦   ¦       ¦       
+¦   ¦       +---content
+¦   ¦       ¦       route.ts
+¦   ¦       ¦       
+¦   ¦       +---progress
+¦   ¦       ¦       route.ts
+¦   ¦       ¦       
+¦   ¦       +---upload-scorm
+¦   ¦       ¦       route.ts
+¦   ¦       ¦       
+¦   ¦       +---validate
+¦   ¦               route.ts
+¦   ¦               
+¦   +---enrollments
+¦   ¦       route.ts
+¦   ¦       
+¦   +---learning-paths
+¦   ¦   ¦   route.ts
+¦   ¦   ¦   
+¦   ¦   +---[id]
+¦   ¦           route.ts
+¦   ¦           
+¦   +---notifications
+¦   ¦   ¦   route.ts
+¦   ¦   ¦   
+¦   ¦   +---mark-all-read
+¦   ¦   ¦       route.ts
+¦   ¦   ¦       
+¦   ¦   +---[id]
+¦   ¦       +---read
+¦   ¦               route.ts
+¦   ¦               
+¦   +---reports
+¦   ¦   ¦   route.ts
+¦   ¦   ¦   
+¦   ¦   +---export
+¦   ¦           route.ts
+¦   ¦           
+¦   +---team-progress
+¦   ¦       route.ts
+¦   ¦       
+¦   +---users
+¦       ¦   route.ts
+¦       ¦   
+¦       +---bulk-import
+¦           ¦   route.ts
+¦           ¦   
+¦           +---template
+¦                   route.ts
+¦                   
++---certificates
+¦   +---[id]
+¦           route.ts
+¦           
++---components
+¦   ¦   analytics-dashboard.tsx
+¦   ¦   bulk-user-manager.tsx
+¦   ¦   certificate-viewer.tsx
+¦   ¦   course-assignment.tsx
+¦   ¦   course-card.tsx
+¦   ¦   course-catalog.tsx
+¦   ¦   course-detail.tsx
+¦   ¦   course-preview.tsx
+¦   ¦   course-uploader.tsx
+¦   ¦   dashboard-ui.tsx
+¦   ¦   learning-path-detail.tsx
+¦   ¦   learning-path-list.tsx
+¦   ¦   notification-bell.tsx
+¦   ¦   reporting-dashboard.tsx
+¦   ¦   scorm-player.tsx
+¦   ¦   team-progress-dashboard.tsx
+¦   ¦   user-management.tsx
+¦   ¦   user-modal.tsx
+¦   ¦   
+¦   +---admin
+¦   ¦       add-user-modal.tsx
+¦   ¦       course-upload.tsx
+¦   ¦       reports.tsx
+¦   ¦       user-management.tsx
+¦   ¦       
+¦   +---ui
+¦           alert.tsx
+¦           button.tsx
+¦           dialog.tsx
+¦           tabs.tsx
+¦           
++---courses
+¦   ¦   page.tsx
+¦   ¦   
+¦   +---[id]
+¦       ¦   page.tsx
+¦       ¦   
+¦       +---player
+¦               page.tsx
+¦               
++---dashboard
+¦       layout.tsx
+¦       page.tsx
+¦       
++---learning-paths
+¦       page.tsx
+¦       
++---lib
+¦       auth.ts
+¦       auth.types.ts
+¦       blob.ts
+¦       course-reminder-job.ts
+¦       file-upload.ts
+¦       notification-service.ts
+¦       prisma.ts
+¦       report-helpers.ts
+¦       scorm-validator.ts
+¦       utils.ts
+¦       websocket-server.ts
+¦       
++---login
+¦       page.tsx
+¦       
++---reports
+¦       page.tsx
+¦       
++---team-progress
+        page.tsx
+        
