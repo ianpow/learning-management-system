@@ -17,30 +17,40 @@ export interface CreateUserRequest {
 
 export async function GET() {
   const session = await getServerSession(authOptions);
+  console.log('Session:', session); // Debug log
+
   if (!session?.user?.role || session.user.role !== 'admin') {
+    console.log('Auth failed:', { 
+      hasSession: !!session, 
+      userRole: session?.user?.role 
+    }); // Debug log
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const allUsers = await prisma.user.findMany({
-    select: {
-      id: true,
-      email: true,
-      first_name: true,
-      last_name: true,
-      role: {
-        select: {
-          name: true
-        }
-      },
-      department: {
-        select: {
-          name: true
+  try {
+    const allUsers = await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        role: {
+          select: {
+            name: true
+          }
+        },
+        department: {
+          select: {
+            name: true
+          }
         }
       }
-    }
-  });
-
-  return NextResponse.json(allUsers);
+    });
+    return NextResponse.json(allUsers);
+  } catch (error) {
+    console.error('Database error:', error);
+    return NextResponse.json({ error: 'Database error' }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {

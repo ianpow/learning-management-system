@@ -1,4 +1,3 @@
-// /app/lib/auth.ts
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { PrismaClient } from "@prisma/client"
@@ -41,26 +40,32 @@ export const authOptions: NextAuthOptions = {
           id: user.id.toString(),
           email: user.email,
           name: `${user.first_name} ${user.last_name}`,
-          role: user.role.name
+          role: user.role.name // Make sure this is included
         }
       }
     })
   ],
   callbacks: {
-    jwt: async ({ token, user }) => {
+    async jwt({ token, user }) {
       if (user) {
-        token.role = user.role;
-        token.id = user.id;
+        return {
+          ...token,
+          id: user.id,
+          role: user.role
+        }
       }
-      return token;
+      return token
     },
-    session: async ({ session, token }) => {
-      if (token) {
-        session.user.role = token.role as string;
-        session.user.id = token.id as string;
+    async session({ session, token }) {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.id,
+          role: token.role
+        }
       }
-      return session;
-    },
+    }
   },
   session: {
     strategy: "jwt"

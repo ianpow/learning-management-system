@@ -8,64 +8,71 @@ import { Button } from '@/components/ui/button'
 import AddUserModal from '@/components/admin/add-user-modal';
 
 interface User {
-  id: number;
-  email: string;
-  first_name: string;  // Changed from firstName
-  last_name: string;   // Changed from lastName
-  role: { name: string };
-  department: { name: string };
-}
-
-interface UserData {
-  users: User[];
+ id: number;
+ email: string;
+ first_name: string;
+ last_name: string;
+ role: { name: string };
+ department: { name: string };
 }
 
 export default function UserManagement() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+ const [users, setUsers] = useState<User[]>([]);
+ const [loading, setLoading] = useState(true);
+ const [error, setError] = useState<string | null>(null);
+ const [searchTerm, setSearchTerm] = useState('');
+ const [isModalOpen, setIsModalOpen] = useState(false);
 
  useEffect(() => {
-   fetchUsers()
- }, [])
+   const loadUsers = async () => {
+     try {
+       await fetchUsers();
+     } catch (err) {
+       console.error('Error loading users:', err);
+       setError(err instanceof Error ? err.message : 'Failed to load users');
+     }
+   };
+   loadUsers();
+ }, []);
 
  const fetchUsers = async () => {
-  try {
-    const response = await fetch('/api/users')
-    if (!response.ok) throw new Error('Failed to fetch users')
-    const data = await response.json()
-    // Transform the data to match interface
-    const transformedUsers = data.map((user: any) => ({
-      id: user.id,
-      email: user.email,
-      firstName: user.first_name,
-      lastName: user.last_name,
-      role: user.role?.name || '',
-      department: user.department?.name || ''
-    }))
-    setUsers(transformedUsers)
-  } catch (err) {
-    setError('Failed to load users')
-  } finally {
-    setLoading(false)
-  }
-}
+   try {
+     setLoading(true);
+     const response = await fetch('/api/users');
+     if (!response.ok) throw new Error('Failed to fetch users');
+     const data = await response.json();
+     
+     const transformedUsers = data.map((user: any) => ({
+       id: user.id,
+       email: user.email,
+       first_name: user.first_name,
+       last_name: user.last_name,
+       role: { name: user.role?.name || '' },
+       department: { name: user.department?.name || '' }
+     }));
+     setUsers(transformedUsers);
+   } catch (err) {
+     console.error('Fetch error:', err);
+     throw err;
+   } finally {
+     setLoading(false);
+   }
+ };
 
  const handleDeleteUser = async (userId: number) => {
-   if (!confirm('Are you sure you want to delete this user?')) return
+   if (!confirm('Are you sure you want to delete this user?')) return;
    try {
-     const response = await fetch(`/api/users/${userId}`, { method: 'DELETE' })
-     if (!response.ok) throw new Error('Failed to delete user')
-     setUsers(users.filter(user => user.id !== userId))
+     const response = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+     if (!response.ok) throw new Error('Failed to delete user');
+     setUsers(users.filter(user => user.id !== userId));
    } catch (err) {
-     setError('Failed to delete user')
+     console.error('Delete error:', err);
+     setError('Failed to delete user');
    }
- }
+ };
 
- if (loading) return <div>Loading...</div>
- if (error) return <Alert variant="destructive">{error}</Alert>
+ if (loading) return <div>Loading...</div>;
+ if (error) return <Alert variant="destructive">{error}</Alert>;
 
  return (
    <div className="space-y-4">
@@ -79,30 +86,30 @@ export default function UserManagement() {
            value={searchTerm}
            onChange={(e) => setSearchTerm(e.target.value)}
          />
-         
        </div>
        <Button onClick={() => setIsModalOpen(true)}>
          <Plus className="h-4 w-4 mr-2" />
          Add User
        </Button>
        <AddUserModal
-  isOpen={isModalOpen}
-  onClose={() => setIsModalOpen(false)}
-  onSubmit={async (userData) => {
-    try {
-      const response = await fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData)
-      });
-      if (!response.ok) throw new Error('Failed to add user');
-      await fetchUsers();
-      setIsModalOpen(false);
-    } catch (err) {
-      setError('Failed to add user');
-    }
-  }}
-/>
+         isOpen={isModalOpen}
+         onClose={() => setIsModalOpen(false)}
+         onSubmit={async (userData) => {
+           try {
+             const response = await fetch('/api/users', {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify(userData)
+             });
+             if (!response.ok) throw new Error('Failed to add user');
+             await fetchUsers();
+             setIsModalOpen(false);
+           } catch (err) {
+             console.error('Add user error:', err);
+             setError('Failed to add user');
+           }
+         }}
+       />
      </div>
 
      <div className="bg-white shadow rounded-lg">
@@ -117,13 +124,13 @@ export default function UserManagement() {
            </tr>
          </thead>
          <tbody>
-         {users
-.filter(user => 
-  user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  user.email.toLowerCase().includes(searchTerm.toLowerCase())
-)
-  .map(user => (
+           {users
+             .filter(user => 
+               user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+               user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+               user.email.toLowerCase().includes(searchTerm.toLowerCase())
+             )
+             .map(user => (
                <tr key={user.id} className="border-b">
                  <td className="px-6 py-4">{user.first_name} {user.last_name}</td>
                  <td className="px-6 py-4">{user.email}</td>
@@ -144,5 +151,5 @@ export default function UserManagement() {
        </table>
      </div>
    </div>
- )
+ );
 }
