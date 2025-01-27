@@ -3,25 +3,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-
-interface Notification {
-  id: number;
-  type: 'course_assigned' | 'course_completed' | 'course_due';
-  content: string;
-  created_at: Date;
-  read: boolean;
-  user_id: number;
-}
-
-interface NotificationResponse {
-  notifications: Array<{
-    id: number;
-    type: 'course_assigned' | 'course_completed' | 'course_due';
-    content: string;
-    created_at: string;
-    read: boolean;
-  }>;
-}
+import { Notification, NotificationResponse } from '@/types/notifications';
 
 export async function GET(request: Request) {
   try {
@@ -40,13 +22,13 @@ export async function GET(request: Request) {
       orderBy: {
         created_at: 'desc'
       },
-      take: 50 // Limit to most recent 50 notifications
-    }) as Notification[];
-
+      take: 50
+    });
+    
     const response: NotificationResponse = {
-      notifications: notifications.map((notification: Notification) => ({
+      notifications: notifications.map(notification => ({
         id: notification.id,
-        type: notification.type,
+        type: notification.type as 'course_assigned' | 'course_completed' | 'course_due',
         content: notification.content,
         created_at: notification.created_at.toISOString(),
         read: notification.read

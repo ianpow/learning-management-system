@@ -1,12 +1,5 @@
 {
     "version": 2,
-    "builds": [
-      {
-        "src": "package.json",
-        "use": "@vercel/next"
-      }
-    ],
-
     "buildCommand": "prisma generate && prisma migrate deploy && next build",
     "regions": ["lhr1"]
   }
