@@ -1,4 +1,4 @@
-//app/admin/page.tsx
+// /app/admin/page.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -9,62 +9,68 @@ import UserManagement from '@/components/admin/user-management'
 import BulkUserUpload from '@/components/bulk-user-manager'
 import CourseUpload from '@/components/admin/course-upload'
 import Reports from '@/components/admin/reports'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export default function AdminPage() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+ const { data: session, status } = useSession()
+ const router = useRouter()
+ const [initialized, setInitialized] = useState(false)
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login')
-      return
-    }
+ useEffect(() => {
+   if (status === 'unauthenticated') {
+     router.push('/login')
+     return
+   }
 
-    if (status === 'authenticated') {
-      // Make sure we have the role property before checking it
-      if (!session?.user?.role || session.user.role !== 'admin') {
-        router.push('/')
-        return
-      }
-      setLoading(false)
-    }
-  }, [session, status, router])
+   if (status === 'authenticated') {
+     if (session?.user?.role !== 'admin') {
+       router.push('/')
+       return
+     }
+     setInitialized(true)
+   }
+ }, [status, session, router])
 
-  if (status === 'loading' || loading) {
-    return <div className="p-6">Loading...</div>
-  }
+ if (!initialized || status === 'loading') {
+   return (
+     <div className="flex justify-center items-center min-h-screen">
+       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+     </div>
+   )
+ }
 
-  // Add an additional check here to prevent rendering before we're sure about admin status
-  if (!session?.user?.role || session.user.role !== 'admin') {
-    return null
-  }
+ if (!session?.user?.role || session.user.role !== 'admin') {
+   return (
+     <Alert variant="destructive">
+       <AlertDescription>You do not have permission to access this page.</AlertDescription>
+     </Alert>
+   )
+ }
 
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
-      <Tabs defaultValue="users" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="bulk">Bulk Upload</TabsTrigger>
-          <TabsTrigger value="courses">Courses</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
-        </TabsList>
+ return (
+   <div className="p-6">
+     <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
+     <Tabs defaultValue="users" className="space-y-4">
+       <TabsList>
+         <TabsTrigger value="users">Users</TabsTrigger>
+         <TabsTrigger value="bulk">Bulk Upload</TabsTrigger>
+         <TabsTrigger value="courses">Courses</TabsTrigger>
+         <TabsTrigger value="reports">Reports</TabsTrigger>
+       </TabsList>
 
-        <TabsContent value="users">
-          {!loading && <UserManagement />}
-        </TabsContent>
-        <TabsContent value="bulk">
-          {!loading && <BulkUserUpload />}
-        </TabsContent>
-        <TabsContent value="courses">
-          {!loading && <CourseUpload />}
-        </TabsContent>
-        <TabsContent value="reports">
-          {!loading && <Reports />}
-        </TabsContent>
-      </Tabs>
-    </div>
-  )
+       <TabsContent value="users">
+         <UserManagement />
+       </TabsContent>
+       <TabsContent value="bulk">
+         <BulkUserUpload />
+       </TabsContent>
+       <TabsContent value="courses">
+         <CourseUpload />
+       </TabsContent>
+       <TabsContent value="reports">
+         <Reports />
+       </TabsContent>
+     </Tabs>
+   </div>
+ )
 }
