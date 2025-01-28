@@ -14,7 +14,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const { courseId } = await request.json();
+    const requestData = await request.json();
+    // Accept either courseId or course_id - new code below this line
+    const courseId = requestData.courseId || requestData.course_id;
 
     const enrollment = await prisma.courseEnrollment.create({
       data: {
@@ -27,6 +29,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(enrollment);
   } catch (error) {
+    console.error('Enrollment error:', error); // Add error logging
     return NextResponse.json(
       { error: 'Failed to create enrollment' },
       { status: 500 }

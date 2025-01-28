@@ -55,20 +55,25 @@ export default function CourseCatalog() {
  }
 
  const handleEnroll = async (courseId: number) => {
-   try {
-     const res = await fetch('/api/courses/enroll', {
-       method: 'POST',
-       headers: {
-         'Content-Type': 'application/json'
-       },
-       body: JSON.stringify({ courseId })
-     })
-     if (!res.ok) throw new Error('Failed to enroll')
-     await fetchCourses()
-   } catch (error) {
-     console.error('Error enrolling in course:', error)
-   }
- }
+  try {
+    const res = await fetch('/api/enrollments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ courseId })  // Keep using courseId as it matches our current API
+    });
+    
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to enroll');
+    }
+    
+    await fetchCourses();
+  } catch (error) {
+    console.error('Error enrolling in course:', error);
+  }
+};
 
  const handleSearch = (e: React.FormEvent) => {
    e.preventDefault()
