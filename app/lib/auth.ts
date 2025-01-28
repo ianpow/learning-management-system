@@ -6,32 +6,6 @@ import bcrypt from "bcrypt"
 
 const prisma = new PrismaClient()
 
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string
-      email: string
-      role: string
-      name?: string  // Make name optional
-    }
-  }
-
-  interface User {
-    id: string
-    email: string
-    role: string
-    name?: string  // Make name optional
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT {
-    id: string
-    role: string
-    name?: string  // Make name optional
-  }
-}
-
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
