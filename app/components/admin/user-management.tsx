@@ -1,3 +1,4 @@
+//app/components/admin/user-management.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -13,6 +14,7 @@ interface User {
   last_name: string
   role: { name: string }
   department: { name: string }
+  location: { name: string }
 }
 
 export default function UserManagement() {
@@ -107,6 +109,7 @@ export default function UserManagement() {
               <th className="px-6 py-3 text-left">Email</th>
               <th className="px-6 py-3 text-left">Role</th>
               <th className="px-6 py-3 text-left">Department</th>
+              <th className="px-6 py-3 text-left">Location</th>
               <th className="px-6 py-3 text-right">Actions</th>
             </tr>
           </thead>
@@ -117,7 +120,8 @@ export default function UserManagement() {
   user.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
   user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
   user.role?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  user.department?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  user.department?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  user.location?.name?.toLowerCase().includes(searchTerm.toLowerCase())
 )
               .map(user => (
                 <tr key={user.id} className="border-b">
@@ -125,6 +129,7 @@ export default function UserManagement() {
                   <td className="px-6 py-4">{user.email}</td>
                   <td className="px-6 py-4">{user.role.name}</td>
                   <td className="px-6 py-4">{user.department.name}</td>
+                  <td className="px-6 py-4">{user.location.name}</td>
                   <td className="px-6 py-4 text-right">
                     <Button 
                       variant="ghost" 
@@ -141,10 +146,36 @@ export default function UserManagement() {
       </div>
 
       <AddUserModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleAddUser}
-      />
+  open={isModalOpen}  // Changed from isOpen
+  onOpenChange={setIsModalOpen}  // Changed from onClose
+  onSubmit={async (userData: {
+    email: string;
+    first_name: string;
+    last_name: string;
+    role_id: string;
+    department_id: string;
+    location_id: string;
+    password: string;
+  }) => {
+    try {
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add user');
+      }
+
+      await fetchUsers();
+      setIsModalOpen(false);
+    } catch (err) {
+      setError('Failed to add user');
+      console.error('Error:', err);
+    }
+  }}
+/>
     </div>
   )
 }
