@@ -56,22 +56,27 @@ export default function CourseCatalog() {
 
  const handleEnroll = async (courseId: number) => {
   try {
+    console.log('Attempting to enroll in course:', courseId); // Debug log
     const res = await fetch('/api/enrollments', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ courseId })  // Keep using courseId as it matches our current API
+      body: JSON.stringify({ courseId })
     });
     
     if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.error || 'Failed to enroll');
+      const errorData = await res.json();
+      console.error('Enrollment API error:', errorData); // Debug log
+      throw new Error(errorData.error || 'Failed to enroll');
     }
     
+    const data = await res.json();
+    console.log('Enrollment success:', data); // Debug log
     await fetchCourses();
   } catch (error) {
     console.error('Error enrolling in course:', error);
+    // You might want to add user feedback here
   }
 };
 
