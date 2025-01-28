@@ -1,4 +1,3 @@
-// app/admin/page.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -13,19 +12,41 @@ import Reports from '@/components/admin/reports'
 export default function AdminPage() {
   const { data: session, status } = useSession()
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    console.log('Session status:', status)
+    console.log('Session data:', session)
+
     if (status === 'loading') return
 
-    if (!session || session.user.role !== 'admin') {
-      redirect('/')
-    }
+    try {
+      if (!session) {
+        console.log('No session, redirecting')
+        redirect('/')
+        return
+      }
 
-    setLoading(false)
+      if (session.user.role !== 'admin') {
+        console.log('Not admin, redirecting')
+        redirect('/')
+        return
+      }
+
+      console.log('Admin verified, loading complete')
+      setLoading(false)
+    } catch (err) {
+      console.error('Error in admin page:', err)
+      setError(err instanceof Error ? err.message : 'An error occurred')
+    }
   }, [session, status])
 
   if (loading) {
     return <div className="p-6">Loading...</div>
+  }
+
+  if (error) {
+    return <div className="p-6 text-red-500">Error: {error}</div>
   }
 
   return (
@@ -39,18 +60,30 @@ export default function AdminPage() {
           <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="users">
-          <UserManagement />
-        </TabsContent>
-        <TabsContent value="bulk">
-          <BulkUserUpload />
-        </TabsContent>
-        <TabsContent value="courses">
-          <CourseUpload />
-        </TabsContent>
-        <TabsContent value="reports">
-          <Reports />
-        </TabsContent>
+        {/* Wrap each tab content in error boundary */}
+        <div className="relative">
+          <TabsContent value="users">
+            <UserManagement />
+          </TabsContent>
+        </div>
+
+        <div className="relative">
+          <TabsContent value="bulk">
+            <BulkUserUpload />
+          </TabsContent>
+        </div>
+
+        <div className="relative">
+          <TabsContent value="courses">
+            <CourseUpload />
+          </TabsContent>
+        </div>
+
+        <div className="relative">
+          <TabsContent value="reports">
+            <Reports />
+          </TabsContent>
+        </div>
       </Tabs>
     </div>
   )
