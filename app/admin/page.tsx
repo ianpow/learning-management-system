@@ -1,8 +1,9 @@
+//app/admin/page.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { redirect } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import UserManagement from '@/components/admin/user-management'
 import BulkUserUpload from '@/components/bulk-user-manager'
@@ -11,42 +12,33 @@ import Reports from '@/components/admin/reports'
 
 export default function AdminPage() {
   const { data: session, status } = useSession()
+  const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    console.log('Session status:', status)
-    console.log('Session data:', session)
-
-    if (status === 'loading') return
-
-    try {
-      if (!session) {
-        console.log('No session, redirecting')
-        redirect('/')
-        return
-      }
-
-      if (session.user.role !== 'admin') {
-        console.log('Not admin, redirecting')
-        redirect('/')
-        return
-      }
-
-      console.log('Admin verified, loading complete')
-      setLoading(false)
-    } catch (err) {
-      console.error('Error in admin page:', err)
-      setError(err instanceof Error ? err.message : 'An error occurred')
+    if (status === 'unauthenticated') {
+      router.push('/login')
+      return
     }
-  }, [session, status])
 
-  if (loading) {
+    if (status === 'authenticated') {
+      // Make sure we have the role property before checking it
+      if (!session?.user?.role || session.user.role !== 'admin') {
+        router.push('/')
+        return
+      }
+      setLoading(false)
+    }
+  }, [session, status, router])
+
+  if (status === 'loading' || loading) {
     return <div className="p-6">Loading...</div>
   }
 
-  if (error) {
-    return <div className="p-6 text-red-500">Error: {error}</div>
+  // Add an additional check here to prevent rendering before we're sure about admin status
+  if (!session?.user?.role || session.user.role !== 'admin') {
+    return null
   }
 
   return (
@@ -60,30 +52,18 @@ export default function AdminPage() {
           <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
 
-        {/* Wrap each tab content in error boundary */}
-        <div className="relative">
-          <TabsContent value="users">
-            <UserManagement />
-          </TabsContent>
-        </div>
-
-        <div className="relative">
-          <TabsContent value="bulk">
-            <BulkUserUpload />
-          </TabsContent>
-        </div>
-
-        <div className="relative">
-          <TabsContent value="courses">
-            <CourseUpload />
-          </TabsContent>
-        </div>
-
-        <div className="relative">
-          <TabsContent value="reports">
-            <Reports />
-          </TabsContent>
-        </div>
+        <TabsContent value="users">
+          {!loading && <UserManagement />}
+        </TabsContent>
+        <TabsContent value="bulk">
+          {!loading && <BulkUserUpload />}
+        </TabsContent>
+        <TabsContent value="courses">
+          {!loading && <CourseUpload />}
+        </TabsContent>
+        <TabsContent value="reports">
+          {!loading && <Reports />}
+        </TabsContent>
       </Tabs>
     </div>
   )
