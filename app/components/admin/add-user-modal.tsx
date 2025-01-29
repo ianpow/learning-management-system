@@ -7,19 +7,19 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface AddUserModalProps {
-  open: boolean  // changed from isOpen
-  onOpenChange: (open: boolean) => void  // changed from onClose
-  onSubmit: (userData: UserData) => void
+ open: boolean
+ onOpenChange: (open: boolean) => void
+ onSubmit: (userData: UserData) => void
 }
 
 interface UserData {
-  email: string
-  first_name: string
-  last_name: string
-  role_id: string
-  department_id: string
-  location_id: string
-  password: string
+ email: string
+ first_name: string
+ last_name: string
+ role_id: string
+ department_id: string
+ location_id: string
+ password: string
 }
 
 interface Role {
@@ -38,50 +38,49 @@ interface Location {
 }
 
 export default function AddUserModal({ open, onOpenChange, onSubmit }: AddUserModalProps) {
-
-const [userData, setUserData] = useState<UserData>({
-  email: '',
-  first_name: '',     // update these to match
-  last_name: '',      // the new interface
-  role_id: '',
-  department_id: '',
-  location_id: '',
-  password: ''
-});
+ const [userData, setUserData] = useState<UserData>({
+   email: '',
+   first_name: '',
+   last_name: '',
+   role_id: '',
+   department_id: '',
+   location_id: '',
+   password: ''
+ })
 
  const [roles, setRoles] = useState<Role[]>([])
  const [departments, setDepartments] = useState<Department[]>([])
  const [locations, setLocations] = useState<Location[]>([])
  const [error, setError] = useState<string | null>(null)
+ const [loading, setLoading] = useState(false)
 
  useEffect(() => {
-   const fetchData = async () => {
-     try {
-       const [rolesRes, deptsRes, locsRes] = await Promise.all([
-         fetch('/api/roles'),
-         fetch('/api/departments'),
-         fetch('/api/locations')
-       ])
-
-       if (!rolesRes.ok || !deptsRes.ok || !locsRes.ok) {
-         throw new Error('Failed to fetch data')
-       }
-
-       const [rolesData, deptsData, locsData] = await Promise.all([
-         rolesRes.json(),
-         deptsRes.json(),
-         locsRes.json()
-       ])
-
-       setRoles(rolesData)
-       setDepartments(deptsData)
-       setLocations(locsData)
-     } catch (err) {
-       setError('Failed to load form data')
-     }
-   }
-
    if (open) {
+     const fetchData = async () => {
+       setLoading(true)
+       try {
+         const [rolesRes, deptsRes, locsRes] = await Promise.all([
+           fetch('/api/roles'),
+           fetch('/api/departments'),
+           fetch('/api/locations')
+         ])
+
+         const [rolesData, deptsData, locsData] = await Promise.all([
+           rolesRes.ok ? rolesRes.json() : [],
+           deptsRes.ok ? deptsRes.json() : [],
+           locsRes.ok ? locsRes.json() : []
+         ])
+
+         setRoles(Array.isArray(rolesData) ? rolesData : [])
+         setDepartments(Array.isArray(deptsData) ? deptsData : [])
+         setLocations(Array.isArray(locsData) ? locsData : [])
+       } catch (err) {
+         console.error('Error fetching data:', err)
+         setError('Failed to load form data')
+       } finally {
+         setLoading(false)
+       }
+     }
      fetchData()
    }
  }, [open])
@@ -92,11 +91,18 @@ const [userData, setUserData] = useState<UserData>({
    onOpenChange(false)
  }
 
+ if (loading) {
+   return (
+     <Dialog open={open} onOpenChange={onOpenChange}>
+       <div className="p-6 w-[500px]">
+         <div>Loading...</div>
+       </div>
+     </Dialog>
+   )
+ }
+
  return (
-  <Dialog 
-    open={open} 
-    onOpenChange={onOpenChange}
-  >
+   <Dialog open={open} onOpenChange={onOpenChange}>
      <div className="p-6 w-[500px]">
        <h2 className="text-lg font-semibold mb-4">Add New User</h2>
        
@@ -126,8 +132,7 @@ const [userData, setUserData] = useState<UserData>({
                required
                className="w-full p-2 border rounded"
                value={userData.first_name}
-               onChange={e => setUserData({...userData, first_name: e.target.value})}  // instead of firstName
-
+               onChange={e => setUserData({...userData, first_name: e.target.value})}
              />
            </div>
            <div>
@@ -137,7 +142,7 @@ const [userData, setUserData] = useState<UserData>({
                required
                className="w-full p-2 border rounded"
                value={userData.last_name}
-               onChange={e => setUserData({...userData, last_name: e.target.value})}   // instead of lastName
+               onChange={e => setUserData({...userData, last_name: e.target.value})}
              />
            </div>
          </div>
@@ -149,12 +154,12 @@ const [userData, setUserData] = useState<UserData>({
                required
                className="w-full p-2 border rounded"
                value={userData.role_id}
-               onChange={e => setUserData({...userData, role_id: e.target.value})}     // instead of role
+               onChange={e => setUserData({...userData, role_id: e.target.value})}
              >
                <option value="">Select Role</option>
-               {roles.map(role => (
+               {Array.isArray(roles) && roles.map(role => role && (
                  <option key={role.id} value={role.id}>
-                   {role.name}
+                   {role?.name || 'Unnamed Role'}
                  </option>
                ))}
              </select>
@@ -165,12 +170,12 @@ const [userData, setUserData] = useState<UserData>({
                required
                className="w-full p-2 border rounded"
                value={userData.department_id}
-               onChange={e => setUserData({...userData, department_id: e.target.value})} // instead of department
+               onChange={e => setUserData({...userData, department_id: e.target.value})}
              >
                <option value="">Select Department</option>
-               {departments.map(dept => (
+               {Array.isArray(departments) && departments.map(dept => dept && (
                  <option key={dept.id} value={dept.id}>
-                   {dept.name}
+                   {dept?.name || 'Unnamed Department'}
                  </option>
                ))}
              </select>
@@ -183,12 +188,12 @@ const [userData, setUserData] = useState<UserData>({
              required
              className="w-full p-2 border rounded"
              value={userData.location_id}
-             onChange={e => setUserData({...userData, location_id: e.target.value})}  // for location
+             onChange={e => setUserData({...userData, location_id: e.target.value})}
            >
              <option value="">Select Location</option>
-             {locations.map(loc => (
+             {Array.isArray(locations) && locations.map(loc => loc && (
                <option key={loc.id} value={loc.id}>
-                 {loc.name}
+                 {loc?.name || 'Unnamed Location'}
                </option>
              ))}
            </select>
@@ -206,7 +211,7 @@ const [userData, setUserData] = useState<UserData>({
          </div>
 
          <div className="flex justify-end space-x-2">
-         <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
            <Button type="submit">Add User</Button>
          </div>
        </form>
