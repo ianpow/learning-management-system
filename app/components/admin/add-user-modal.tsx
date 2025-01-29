@@ -1,3 +1,4 @@
+// /app/components/admin/add-user-modal.tsx
 'use client'
 
 import React, { useState, useEffect } from 'react'
@@ -88,7 +89,7 @@ const [userData, setUserData] = useState<UserData>({
  const handleSubmit = (e: React.FormEvent) => {
    e.preventDefault()
    onSubmit(userData)
-   close()
+   onOpenChange(false)
  }
 
  return (
@@ -205,7 +206,7 @@ const [userData, setUserData] = useState<UserData>({
          </div>
 
          <div className="flex justify-end space-x-2">
-           <Button variant="ghost" onClick={close}>Cancel</Button>
+         <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
            <Button type="submit">Add User</Button>
          </div>
        </form>
