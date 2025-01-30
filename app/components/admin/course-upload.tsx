@@ -1,30 +1,89 @@
-// app/components/admin/course-upload.tsx
+// /app/components/admin/course-upload.tsx
 'use client'
 
-import { useState } from 'react'
-import { Upload, AlertCircle } from 'lucide-react'
-import { Alert } from '@/components/ui/alert'
+import { useState, useEffect } from 'react'
+import { Upload, AlertCircle, CheckCircle } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+
+interface Department {
+ id: number
+ name: string
+}
+
+interface Role {
+ id: number
+ name: string
+}
+
+interface Location {
+ id: number
+ name: string
+}
 
 interface CourseData {
  title: string
  description: string
- department: string
- isMandatory: boolean
- scormPackage?: File
+ duration_minutes: number
+ thumbnail_url?: string
+ access_control: {
+   departments: number[]
+   roles: number[]
+   locations: number[]
+ }
 }
 
 export default function CourseUpload() {
  const [courseData, setCourseData] = useState<CourseData>({
    title: '',
    description: '',
-   department: '',
-   isMandatory: false
+   duration_minutes: 0,
+   thumbnail_url: '',
+   access_control: {
+     departments: [],
+     roles: [],
+     locations: []
+   }
  })
+
+ const [departments, setDepartments] = useState<Department[]>([])
+ const [roles, setRoles] = useState<Role[]>([])
+ const [locations, setLocations] = useState<Location[]>([])
  const [file, setFile] = useState<File | null>(null)
+ const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
  const [uploading, setUploading] = useState(false)
  const [error, setError] = useState('')
  const [success, setSuccess] = useState(false)
+
+ useEffect(() => {
+   const fetchData = async () => {
+     try {
+       const [deptsRes, rolesRes, locsRes] = await Promise.all([
+         fetch('/api/departments'),
+         fetch('/api/roles'),
+         fetch('/api/locations')
+       ])
+
+       if (!deptsRes.ok || !rolesRes.ok || !locsRes.ok) {
+         throw new Error('Failed to fetch data')
+       }
+
+       const [deptsData, rolesData, locsData] = await Promise.all([
+         deptsRes.json(),
+         rolesRes.json(),
+         locsRes.json()
+       ])
+
+       setDepartments(deptsData)
+       setRoles(rolesData)
+       setLocations(locsData)
+     } catch (err) {
+       setError('Failed to load form data')
+     }
+   }
+
+   fetchData()
+ }, [])
 
  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
    const file = e.target.files?.[0]
@@ -34,6 +93,17 @@ export default function CourseUpload() {
    } else {
      setError('Please upload a valid SCORM package (.zip)')
      setFile(null)
+   }
+ }
+
+ const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+   const file = e.target.files?.[0]
+   if (file && file.type.startsWith('image/')) {
+     setThumbnailFile(file)
+     setError('')
+   } else {
+     setError('Please upload a valid image file')
+     setThumbnailFile(null)
    }
  }
 
@@ -50,6 +120,9 @@ export default function CourseUpload() {
 
    const formData = new FormData()
    formData.append('scormPackage', file)
+   if (thumbnailFile) {
+     formData.append('thumbnail', thumbnailFile)
+   }
    formData.append('data', JSON.stringify(courseData))
 
    try {
@@ -64,10 +137,16 @@ export default function CourseUpload() {
      setCourseData({
        title: '',
        description: '',
-       department: '',
-       isMandatory: false
+       duration_minutes: 0,
+       thumbnail_url: '',
+       access_control: {
+         departments: [],
+         roles: [],
+         locations: []
+       }
      })
      setFile(null)
+     setThumbnailFile(null)
    } catch (err) {
      setError('Failed to upload course')
    } finally {
@@ -81,13 +160,14 @@ export default function CourseUpload() {
        {error && (
          <Alert variant="destructive">
            <AlertCircle className="h-4 w-4" />
-           {error}
+           <AlertDescription>{error}</AlertDescription>
          </Alert>
        )}
 
        {success && (
          <Alert className="bg-green-50 border-green-200 text-green-800">
-           Course uploaded successfully
+           <CheckCircle className="h-4 w-4" />
+           <AlertDescription>Course uploaded successfully</AlertDescription>
          </Alert>
        )}
 
@@ -114,54 +194,135 @@ export default function CourseUpload() {
        </div>
 
        <div>
-         <label className="block text-sm font-medium mb-1">Department</label>
-         <select
+         <label className="block text-sm font-medium mb-1">Duration (minutes)</label>
+         <input
+           type="number"
            required
+           min="1"
            className="w-full p-2 border rounded"
-           value={courseData.department}
-           onChange={e => setCourseData({...courseData, department: e.target.value})}
-         >
-           <option value="">Select Department</option>
-           <option value="HR">HR</option>
-           <option value="IT">IT</option>
-           <option value="Sales">Sales</option>
-         </select>
+           value={courseData.duration_minutes}
+           onChange={e => setCourseData({...courseData, duration_minutes: Number(e.target.value)})}
+         />
        </div>
 
-       <div className="flex items-center">
-         <input
-           type="checkbox"
-           id="mandatory"
-           checked={courseData.isMandatory}
-           onChange={e => setCourseData({...courseData, isMandatory: e.target.checked})}
-           className="mr-2"
-         />
-         <label htmlFor="mandatory">Mandatory Course</label>
+       <div className="space-y-4">
+         <h3 className="font-medium">Course Access</h3>
+         
+         <div>
+           <label className="block text-sm font-medium mb-1">Available to Departments</label>
+           <select
+             multiple
+             className="w-full p-2 border rounded"
+             value={courseData.access_control.departments.map(String)}
+             onChange={(e) => {
+               const selectedOptions = Array.from(e.target.selectedOptions);
+               const selectedIds = selectedOptions.map(option => Number(option.value));
+               setCourseData({
+                 ...courseData,
+                 access_control: {
+                   ...courseData.access_control,
+                   departments: selectedIds
+                 }
+               });
+             }}
+           >
+             {departments.map(dept => (
+               <option key={dept.id} value={dept.id.toString()}>
+                 {dept.name}
+               </option>
+             ))}
+           </select>
+           <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
+         </div>
+
+         <div>
+           <label className="block text-sm font-medium mb-1">Available to Roles</label>
+           <select
+             multiple
+             className="w-full p-2 border rounded"
+             value={courseData.access_control.roles.map(String)}
+             onChange={(e) => {
+               const selectedOptions = Array.from(e.target.selectedOptions);
+               const selectedIds = selectedOptions.map(option => Number(option.value));
+               setCourseData({
+                 ...courseData,
+                 access_control: {
+                   ...courseData.access_control,
+                   roles: selectedIds
+                 }
+               });
+             }}
+           >
+             {roles.map(role => (
+               <option key={role.id} value={role.id.toString()}>
+                 {role.name}
+               </option>
+             ))}
+           </select>
+         </div>
+
+         <div>
+           <label className="block text-sm font-medium mb-1">Available to Locations</label>
+           <select
+             multiple
+             className="w-full p-2 border rounded"
+             value={courseData.access_control.locations.map(String)}
+             onChange={(e) => {
+               const selectedOptions = Array.from(e.target.selectedOptions);
+               const selectedIds = selectedOptions.map(option => Number(option.value));
+               setCourseData({
+                 ...courseData,
+                 access_control: {
+                   ...courseData.access_control,
+                   locations: selectedIds
+                 }
+               });
+             }}
+           >
+             {locations.map(loc => (
+               <option key={loc.id} value={loc.id.toString()}>
+                 {loc.name}
+               </option>
+             ))}
+           </select>
+         </div>
        </div>
 
-       <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
-         <input
-           type="file"
-           accept=".zip"
-           onChange={handleFileChange}
-           className="hidden"
-           id="scorm-upload"
-         />
-         <label
-           htmlFor="scorm-upload"
-           className="flex flex-col items-center cursor-pointer"
-         >
-           <Upload className="h-12 w-12 text-gray-400" />
-           <p className="mt-2 text-sm text-gray-600">
-             Click to upload or drag and drop
-           </p>
-           <p className="text-xs text-gray-500">SCORM packages only (.zip)</p>
-         </label>
-         {file && (
-           <p className="mt-2 text-sm text-gray-600 text-center">
-             Selected file: {file.name}
-           </p>
-         )}
+       <div className="space-y-4">
+         <div>
+           <label className="block text-sm font-medium mb-1">Course Thumbnail</label>
+           <input
+             type="file"
+             accept="image/*"
+             onChange={handleThumbnailChange}
+             className="w-full"
+           />
+         </div>
+
+         <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+           <input
+             type="file"
+             accept=".zip"
+             onChange={handleFileChange}
+             className="hidden"
+             id="scorm-upload"
+           />
+           <label
+             htmlFor="scorm-upload"
+             className="flex flex-col items-center cursor-pointer"
+           >
+             <Upload className="h-12 w-12 text-gray-400" />
+             <p className="mt-2 text-sm text-gray-600">
+               Click to upload or drag and drop
+             </p>
+             <p className="text-xs text-gray-500">SCORM packages only (.zip)</p>
+           </label>
+           {file && (
+             <p className="mt-2 text-sm text-gray-600 text-center">
+               Selected file: {file.name}
+             </p>
+           )}
+         </div>
        </div>
 
        <Button

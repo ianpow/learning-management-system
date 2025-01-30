@@ -100,6 +100,21 @@ const ScormPlayer: React.FC<ScormPlayerProps> = ({ courseId }) => {
     }
   };
 
+  useEffect(() => {
+    const fetchCourseDetails = async () => {
+      try {
+        const response = await fetch(`/api/courses/${courseId}/content`)
+        if (!response.ok) throw new Error('Failed to fetch course details')
+        const data = await response.json()
+        setCourse(data)
+      } catch (error) {
+        console.error('Error fetching course:', error)
+        setError('Failed to load course')
+      }
+    }
+    fetchCourseDetails()
+  }, [courseId])
+
   const updateProgress = async (value: number) => {
     try {
       const progressValue = Math.min(Math.max(value, 0), 100);
@@ -187,14 +202,13 @@ const ScormPlayer: React.FC<ScormPlayerProps> = ({ courseId }) => {
       </div>
 
       <div className="flex-1 bg-gray-100">
-        <iframe
-          ref={iframeRef}
-          src={course.scorm_package_url}
-          className="w-full h-full border-none"
-          title="SCORM Content"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-        />
+      <iframe
+    src={course?.scorm_package_url}
+    className="w-full h-full border-none"
+    title="SCORM Content"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+  />
       </div>
     </div>
   );

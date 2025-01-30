@@ -28,7 +28,7 @@
     "clsx": "^2.1.1",
     "cron": "^2.4.0",
     "date-fns": "^2.30.0",
-    "fast-xml-parser": "^4.2.5",
+    "fast-xml-parser": "^4.5.1",
     "json2csv": "^6.0.0-alpha.2",
     "jspdf": "^2.5.2",
     "jszip": "^3.10.1",
@@ -42,6 +42,7 @@
     "recharts": "^2.7.2",
     "swr": "^2.3.0",
     "tailwind-merge": "^2.6.0",
+    "unzipper": "^0.12.3",
     "ws": "^8.13.0"
   },
   "devDependencies": {
