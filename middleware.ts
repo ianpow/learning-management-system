@@ -5,14 +5,21 @@ import type { NextRequest } from 'next/server'
 export function middleware(request: NextRequest) {
   const response = NextResponse.next()
 
-  // Security headers
-  response.headers.set('X-Frame-Options', 'DENY')
+  // Create a more permissive CSP that includes Vercel blob storage
+  const csp = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' blob: data: https://*.vercel-storage.com",
+    "frame-src 'self' https://*.vercel-storage.com blob:",
+    "connect-src 'self' https://*.vercel-storage.com",
+    "font-src 'self'",
+    "media-src 'self' blob: https://*.vercel-storage.com"
+  ].join('; ')
+
+  response.headers.set('Content-Security-Policy', csp)
+  response.headers.set('X-Frame-Options', 'SAMEORIGIN')
   response.headers.set('X-Content-Type-Options', 'nosniff')
-  response.headers.set('X-XSS-Protection', '1; mode=block')
-  response.headers.set(
-    'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:;"
-  )
   response.headers.set('Referrer-Policy', 'origin-when-cross-origin')
   response.headers.set(
     'Strict-Transport-Security',
