@@ -2,114 +2,77 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ArrowRight, ChevronDown } from 'lucide-react'
-import Link from 'next/link'
-
-interface Course {
- id: number;
- title: string;
- duration_minutes: number;
- completion_status: 'not_started' | 'in_progress' | 'completed';
-}
+import { Button } from '@/components/ui/button'
 
 interface LearningPath {
- id: number;
- title: string;
- description: string;
- courses: Course[];
- progress: number;
+  id: number
+  name: string
+  description: string
+  total_courses: number
+  progress: number
 }
 
 export default function LearningPaths() {
- const [paths, setPaths] = useState<LearningPath[]>([])
- const [expandedPath, setExpandedPath] = useState<number | null>(null)
+  const [paths, setPaths] = useState<LearningPath[]>([])
+  const [loading, setLoading] = useState(true)
 
- useEffect(() => {
-   fetchPaths()
- }, [])
+  useEffect(() => {
+    fetchLearningPaths()
+  }, [])
 
- const fetchPaths = async () => {
-   const res = await fetch('/api/learning-paths')
-   const data = await res.json()
-   setPaths(data)
- }
+  const fetchLearningPaths = async () => {
+    try {
+      const response = await fetch('/api/learning-paths')
+      if (!response.ok) throw new Error('Failed to fetch learning paths')
+      const data = await response.json()
+      setPaths(data)
+    } catch (error) {
+      console.error('Error:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
- return (
-   <div className="p-6 space-y-6">
-     {paths.map(path => (
-       <div key={path.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
-         <div 
-           className="p-4 flex justify-between items-center cursor-pointer"
-           onClick={() => setExpandedPath(expandedPath === path.id ? null : path.id)}
-         >
-           <div>
-             <h3 className="font-semibold text-lg">{path.title}</h3>
-             <p className="text-gray-600">{path.description}</p>
-           </div>
-           <ChevronDown className={`transform transition-transform ${
-             expandedPath === path.id ? 'rotate-180' : ''
-           }`} />
-         </div>
+  if (loading) return <div>Loading...</div>
 
-         {expandedPath === path.id && (
-           <div className="p-4 border-t">
-             <div className="mb-4">
-               <div className="w-full bg-gray-200 rounded-full h-2">
-                 <div 
-                   className="bg-blue-600 h-2 rounded-full transition-all"
-                   style={{ width: `${path.progress}%` }}
-                 />
-               </div>
-               <p className="text-sm text-gray-600 mt-1">
-                 {path.progress}% Complete
-               </p>
-             </div>
-
-             <div className="space-y-4">
-               {path.courses.map((course, index) => (
-                 <div 
-                   key={course.id}
-                   className={`p-4 rounded-lg border ${
-                     course.completion_status === 'completed'
-                       ? 'bg-green-50 border-green-200'
-                       : course.completion_status === 'in_progress'
-                       ? 'bg-blue-50 border-blue-200'
-                       : 'bg-gray-50 border-gray-200'
-                   }`}
-                 >
-                   <div className="flex justify-between items-center">
-                     <div>
-                       <div className="flex items-center">
-                         <span className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-sm mr-3">
-                           {index + 1}
-                         </span>
-                         <h4 className="font-medium">{course.title}</h4>
-                       </div>
-                       <p className="text-sm text-gray-600 mt-1">
-                         {course.duration_minutes} minutes
-                       </p>
-                     </div>
-
-                     {course.completion_status !== 'not_started' && (
-                       <Link
-                         href={`/courses/${course.id}`}
-                         className="flex items-center text-blue-600 hover:text-blue-800"
-                       >
-                         {course.completion_status === 'completed' 
-                           ? 'Review' 
-                           : 'Continue'
-                         }
-                         <ArrowRight className="ml-2 h-4 w-4" />
-                       </Link>
-                     )}
-                   </div>
-                 </div>
-               ))}
-             </div>
-           </div>
-         )}
-       </div>
-     ))}
-   </div>
- )
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6">Learning Paths</h1>
+      
+      {paths.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500">No learning paths available.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {paths.map(path => (
+            <div key={path.id} className="bg-white rounded-lg border shadow-sm p-6">
+              <h3 className="font-semibold mb-2">{path.name}</h3>
+              <p className="text-sm text-gray-600 mb-4">{path.description}</p>
+              <div className="text-sm text-gray-500 mb-2">
+                {path.total_courses} Courses
+              </div>
+              {path.progress > 0 && (
+                <div className="mb-4">
+                  <div className="text-sm text-gray-500 mb-1">Progress: {path.progress}%</div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full" 
+                      style={{ width: `${path.progress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              <Button 
+                className="w-full"
+                onClick={() => window.location.href = `/learning-paths/${path.id}`}
+              >
+                {path.progress > 0 ? 'Continue Path' : 'Start Path'}
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }

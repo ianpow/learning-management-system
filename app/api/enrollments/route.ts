@@ -1,62 +1,50 @@
 // /app/api/enrollments/route.ts
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
 
-export async function POST(request: Request) {
+export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    console.log('Session:', session);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const requestData = await request.json();
-    console.log('Request data:', requestData); // Debug log
-
-    if (!requestData.courseId) {
-      return NextResponse.json(
-        { error: 'Course ID is required' },
-        { status: 400 }
-      );
-    }
-
-    const existingEnrollment = await prisma.courseEnrollment.findUnique({
+    const enrollments = await prisma.courseEnrollment.findMany({
       where: {
-        user_id_course_id: {
-          user_id: parseInt(session.user.id),
-          course_id: requestData.courseId
+        user_id: parseInt(session.user.id)
+      },
+      include: {
+        course: {
+          select: {
+            id: true,
+            title: true,
+            description: true
+          }
+        },
+        progress: {
+          select: {
+            progress_percentage: true
+          }
         }
       }
-    });
+    })
 
-    if (existingEnrollment) {
-      return NextResponse.json(
-        { error: 'Already enrolled in this course' },
-        { status: 400 }
-      );
-    }
+    const formattedEnrollments = enrollments.map(enrollment => ({
+      id: enrollment.course.id,
+      title: enrollment.course.title,
+      description: enrollment.course.description,
+      progress: enrollment.progress?.progress_percentage || 0,
+      enrollment_date: enrollment.enrollment_date
+    }))
 
-    const enrollment = await prisma.courseEnrollment.create({
-      data: {
-        user_id: parseInt(session.user.id),
-        course_id: requestData.courseId,
-        enrollment_date: new Date(),
-        enrollment_type: 'self'
-      }
-    });
-
-    console.log('Created enrollment:', enrollment); // Debug log
-    return NextResponse.json(enrollment);
+    return NextResponse.json(formattedEnrollments)
   } catch (error) {
-    console.error('Enrollment error details:', error); // Detailed error log
+    console.error('Error fetching enrollments:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to create enrollment' },
+      { error: 'Failed to fetch enrollments' },
       { status: 500 }
-    );
+    )
   }
 }

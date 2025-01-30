@@ -1,75 +1,53 @@
 // app/api/courses/route.ts
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
-import { uploadFile } from '@/lib/file-upload';
+import { NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth/next'  // Updated import path
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+
+interface CourseData {
+  id: number;
+  title: string;
+  description: string;
+  duration_minutes: number;
+  enrollments: any[]; // You can make this more specific based on your Prisma types
+}
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions)
     if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const courses = await prisma.course.findMany({
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        thumbnail_url: true,
-        duration_minutes: true,
-        scorm_package_url: true,
-        is_mandatory: true,
-        department: {
-          select: {
-            name: true
-          }
-        },
-        created_by: {
-          select: {
-            first_name: true,
-            last_name: true
+      include: {
+        enrollments: {
+          where: {
+            user_id: parseInt(session.user.id)
+          },
+          include: {
+            progress: true
           }
         }
       }
-    });
+    })
 
-    return NextResponse.json(courses);
+    const formattedCourses = courses.map(course => ({
+      id: course.id,
+      title: course.title,
+      description: course.description,
+      duration_minutes: course.duration_minutes,
+      enrolled_count: course.enrollments.length,
+      is_enrolled: course.enrollments.length > 0,
+      progress: course.enrollments[0]?.progress?.progress_percentage || 0
+    }))
+
+    return NextResponse.json(formattedCourses)
   } catch (error) {
-    console.error('Error fetching courses:', error);
+    console.error('Error fetching courses:', error)
     return NextResponse.json(
       { error: 'Failed to fetch courses' },
       { status: 500 }
-    );
+    )
   }
-}
-
-export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.role || session.user.role !== 'admin') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const formData = await request.formData();
-  const file = formData.get('scormPackage') as File;
-  const data = JSON.parse(formData.get('data') as string);
-
-  const fileUrl = await uploadFile(file);
-
-  const course = await prisma.course.create({
-    data: {
-      title: data.title,
-      description: data.description,
-      department_id: parseInt(data.department),
-      is_mandatory: data.isMandatory,
-      scorm_package_url: fileUrl,
-      created_by_id: parseInt(session.user.id)
-    }
-  });
-
-  return NextResponse.json(course);
 }
