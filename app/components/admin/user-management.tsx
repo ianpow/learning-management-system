@@ -1,4 +1,4 @@
-// app/components/admin/user-management.tsx
+// /app/components/admin/user-management.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -21,6 +21,7 @@ export default function UserManagement() {
  const [users, setUsers] = useState<User[]>([])
  const [loading, setLoading] = useState(true)
  const [error, setError] = useState<string | null>(null)
+ const [searchInput, setSearchInput] = useState('')
  const [searchTerm, setSearchTerm] = useState('')
  const [isModalOpen, setIsModalOpen] = useState(false)
  const [initialized, setInitialized] = useState(false)
@@ -43,6 +44,11 @@ export default function UserManagement() {
    } finally {
      setLoading(false)
    }
+ }
+
+ const handleSearch = (e: React.FormEvent) => {
+   e.preventDefault()
+   setSearchTerm(searchInput)
  }
 
  const handleAddUser = async (userData: any) => {
@@ -87,16 +93,24 @@ export default function UserManagement() {
  return (
    <div className="space-y-4">
      <div className="flex justify-between items-center">
-       <div className="relative">
-         <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-         <input
-           type="text"
-           placeholder="Search users..."
-           className="pl-10 pr-4 py-2 border rounded-md"
-           value={searchTerm}
-           onChange={(e) => setSearchTerm(e.target.value)}
-         />
-       </div>
+       <form onSubmit={handleSearch} className="flex gap-2">
+         <div className="relative">
+           <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+           <input
+             type="text"
+             placeholder="Search users..."
+             className="pl-10 pr-4 py-2 border rounded-md"
+             value={searchInput}
+             onChange={(e) => {
+               setSearchInput(e.target.value)
+               setSearchTerm(e.target.value) // Keep instant search
+             }}
+           />
+         </div>
+         <Button type="submit" variant="default">
+           <Search className="h-4 w-4" />
+         </Button>
+       </form>
        <Button onClick={() => setIsModalOpen(true)}>
          <Plus className="h-4 w-4 mr-2" />
          Add User

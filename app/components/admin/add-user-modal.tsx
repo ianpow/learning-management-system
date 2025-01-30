@@ -85,10 +85,28 @@ export default function AddUserModal({ open, onOpenChange, onSubmit }: AddUserMo
    }
  }, [open])
 
- const handleSubmit = (e: React.FormEvent) => {
+ const handleSubmit = async (e: React.FormEvent) => {
    e.preventDefault()
-   onSubmit(userData)
-   onOpenChange(false)
+   setError(null)
+
+   // Validate required fields
+   if (!userData.email || !userData.password || !userData.first_name || 
+       !userData.last_name || !userData.role_id || !userData.department_id || 
+       !userData.location_id) {
+     setError('All fields are required')
+     return
+   }
+
+   try {
+     // Log the data being sent
+     console.log('Submitting user data:', userData)
+
+     onSubmit(userData)
+     onOpenChange(false)
+   } catch (err) {
+     console.error('Error submitting form:', err)
+     setError('Failed to create user')
+   }
  }
 
  if (loading) {
@@ -107,7 +125,7 @@ export default function AddUserModal({ open, onOpenChange, onSubmit }: AddUserMo
        <h2 className="text-lg font-semibold mb-4">Add New User</h2>
        
        {error && (
-         <Alert variant="destructive">
+         <Alert variant="destructive" className="mb-4">
            <AlertDescription>{error}</AlertDescription>
          </Alert>
        )}
