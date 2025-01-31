@@ -154,29 +154,3 @@ export async function POST(
     });
   }
 }
-
-// Helper function to check if a user has access to a course
-export async function hasAccess(userId: number, courseId: number): Promise<boolean> {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      role_id: true,
-      department_id: true,
-      location_id: true
-    }
-  });
-
-  if (!user) return false;
-
-  const accessControl = await prisma.$queryRaw<CourseAccessRecord[]>`
-    SELECT * FROM "CourseAccess"
-    WHERE course_id = ${courseId}
-  `;
-
-  return accessControl.some(ac => {
-    if (ac.type === 'DEPARTMENT' && ac.department_id === user.department_id) return true;
-    if (ac.type === 'ROLE' && ac.role_id === user.role_id) return true;
-    if (ac.type === 'LOCATION' && ac.location_id === user.location_id) return true;
-    return false;
-  });
-}
