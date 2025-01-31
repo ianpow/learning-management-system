@@ -40,6 +40,7 @@ model Role {
   created_at  DateTime  @default(now())
   updated_at  DateTime  @updatedAt
   users       User[]
+  courseAccess CourseAccess[]
 }
 
 model Department {
@@ -49,6 +50,7 @@ model Department {
   updated_at  DateTime  @updatedAt
   users       User[]
   courses     Course[]
+  courseAccess CourseAccess[]
 }
 
 model Location {
@@ -57,6 +59,7 @@ model Location {
   created_at  DateTime  @default(now())
   updated_at  DateTime  @updatedAt
   users       User[]
+  courseAccess CourseAccess[]
 }
 
 model Course {
@@ -79,6 +82,25 @@ model Course {
   progress          CourseProgress[]
   certificates      Certificate[]
   path_courses      PathCourse[]
+  access_control    CourseAccess[]
+}
+
+model CourseAccess {
+  id            Int       @id @default(autoincrement())
+  course_id     Int
+  department_id Int?
+  role_id       Int?
+  location_id   Int?
+  type          String    // DEPARTMENT, ROLE, LOCATION
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  course        Course     @relation(fields: [course_id], references: [id])
+  department    Department? @relation(fields: [department_id], references: [id])
+  role          Role?      @relation(fields: [role_id], references: [id])
+  location      Location?  @relation(fields: [location_id], references: [id])
+
+  @@unique([course_id, department_id, role_id, location_id])
 }
 
 model CourseEnrollment {
@@ -99,7 +121,7 @@ model CourseEnrollment {
   learning_path   LearningPath? @relation(fields: [learning_path_id], references: [id])
   progress        CourseProgress?
   path_course_id Int?
- pathCourse PathCourse? @relation(fields: [path_course_id], references: [id])
+  pathCourse PathCourse? @relation(fields: [path_course_id], references: [id])
 
   @@unique([user_id, course_id])
 }
@@ -147,15 +169,15 @@ model LearningPath {
 }
 
 model PathCourse {
- id                Int           @id @default(autoincrement())
- learning_path_id  Int
- course_id         Int
- sequence_order    Int
- enrollments       CourseEnrollment[]
- learning_path     LearningPath  @relation(fields: [learning_path_id], references: [id])
- course            Course        @relation(fields: [course_id], references: [id])
- created_at        DateTime      @default(now())
- updated_at        DateTime      @updatedAt
+  id                Int           @id @default(autoincrement())
+  learning_path_id  Int
+  course_id         Int
+  sequence_order    Int
+  enrollments       CourseEnrollment[]
+  learning_path     LearningPath  @relation(fields: [learning_path_id], references: [id])
+  course            Course        @relation(fields: [course_id], references: [id])
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @updatedAt
 }
 
 model Notification {

@@ -1,0 +1,148 @@
+📦app
+ ┣ 📂admin
+ ┃ ┣ 📂courses
+ ┃ ┃ ┗ 📂assign
+ ┃ ┃ ┃ ┗ 📜page.tsx
+ ┃ ┣ 📂users
+ ┃ ┃ ┗ 📂bulk
+ ┃ ┃ ┃ ┣ 📂courses
+ ┃ ┃ ┃ ┃ ┗ 📂upload
+ ┃ ┃ ┃ ┃ ┃ ┗ 📜page.tsx
+ ┃ ┃ ┃ ┣ 📂users
+ ┃ ┃ ┃ ┃ ┗ 📜page.tsx
+ ┃ ┃ ┃ ┗ 📜page.tsx
+ ┃ ┣ 📜AdminContent.tsx
+ ┃ ┣ 📜error.tsx
+ ┃ ┗ 📜page.tsx
+ ┣ 📂analytics
+ ┃ ┗ 📜page.tsx
+ ┣ 📂api
+ ┃ ┣ 📂analytics
+ ┃ ┃ ┗ 📜route.ts
+ ┃ ┣ 📂auth
+ ┃ ┃ ┗ 📂[...nextauth]
+ ┃ ┃ ┃ ┗ 📜route.ts
+ ┃ ┣ 📂courses
+ ┃ ┃ ┣ 📂access-control
+ ┃ ┃ ┃ ┗ 📜route.ts
+ ┃ ┃ ┣ 📂assign
+ ┃ ┃ ┃ ┗ 📜route.ts
+ ┃ ┃ ┣ 📂enrollment-status
+ ┃ ┃ ┃ ┗ 📜route.ts
+ ┃ ┃ ┣ 📂metadata
+ ┃ ┃ ┃ ┗ 📜route.ts
+ ┃ ┃ ┣ 📂[id]
+ ┃ ┃ ┃ ┣ 📂complete
+ ┃ ┃ ┃ ┃ ┗ 📜route.ts
+ ┃ ┃ ┃ ┣ 📂content
+ ┃ ┃ ┃ ┃ ┗ 📜route.ts
+ ┃ ┃ ┃ ┣ 📂progress
+ ┃ ┃ ┃ ┃ ┗ 📜route.ts
+ ┃ ┃ ┃ ┣ 📂upload-scorm
+ ┃ ┃ ┃ ┃ ┗ 📜route.ts
+ ┃ ┃ ┃ ┣ 📂validate
+ ┃ ┃ ┃ ┃ ┗ 📜route.ts
+ ┃ ┃ ┃ ┗ 📜route.ts
+ ┃ ┃ ┗ 📜route.ts
+ ┃ ┣ 📂departments
+ ┃ ┃ ┗ 📜route.ts
+ ┃ ┣ 📂enrollments
+ ┃ ┃ ┗ 📜route.ts
+ ┃ ┣ 📂learning-paths
+ ┃ ┃ ┣ 📂[id]
+ ┃ ┃ ┃ ┗ 📜route.ts
+ ┃ ┃ ┗ 📜route.ts
+ ┃ ┣ 📂locations
+ ┃ ┃ ┗ 📜route.ts
+ ┃ ┣ 📂notifications
+ ┃ ┃ ┣ 📂mark-all-read
+ ┃ ┃ ┃ ┗ 📜route.ts
+ ┃ ┃ ┣ 📂[id]
+ ┃ ┃ ┃ ┗ 📂read
+ ┃ ┃ ┃ ┃ ┗ 📜route.ts
+ ┃ ┃ ┗ 📜route.ts
+ ┃ ┣ 📂reports
+ ┃ ┃ ┣ 📂export
+ ┃ ┃ ┃ ┗ 📜route.ts
+ ┃ ┃ ┗ 📜route.ts
+ ┃ ┣ 📂roles
+ ┃ ┃ ┗ 📜route.ts
+ ┃ ┣ 📂team-progress
+ ┃ ┃ ┗ 📜route.ts
+ ┃ ┗ 📂users
+ ┃ ┃ ┣ 📂bulk-import
+ ┃ ┃ ┃ ┣ 📂template
+ ┃ ┃ ┃ ┃ ┗ 📜route.ts
+ ┃ ┃ ┃ ┗ 📜route.ts
+ ┃ ┃ ┗ 📜route.ts
+ ┣ 📂certificates
+ ┃ ┗ 📂[id]
+ ┃ ┃ ┗ 📜route.ts
+ ┣ 📂components
+ ┃ ┣ 📂admin
+ ┃ ┃ ┣ 📜add-user-modal.tsx
+ ┃ ┃ ┣ 📜AdminDashboard.tsx
+ ┃ ┃ ┣ 📜course-upload.tsx
+ ┃ ┃ ┣ 📜reports.tsx
+ ┃ ┃ ┗ 📜user-management.tsx
+ ┃ ┣ 📂ui
+ ┃ ┃ ┣ 📜alert.tsx
+ ┃ ┃ ┣ 📜button.tsx
+ ┃ ┃ ┣ 📜card.tsx
+ ┃ ┃ ┣ 📜dialog.tsx
+ ┃ ┃ ┗ 📜tabs.tsx
+ ┃ ┣ 📜analytics-dashboard.tsx
+ ┃ ┣ 📜bulk-user-manager.tsx
+ ┃ ┣ 📜certificate-viewer.tsx
+ ┃ ┣ 📜course-assignment.tsx
+ ┃ ┣ 📜course-card.tsx
+ ┃ ┣ 📜course-catalog.tsx
+ ┃ ┣ 📜course-detail.tsx
+ ┃ ┣ 📜course-preview.tsx
+ ┃ ┣ 📜course-uploader.tsx
+ ┃ ┣ 📜dashboard-ui.tsx
+ ┃ ┣ 📜learning-path-detail.tsx
+ ┃ ┣ 📜learning-path-list.tsx
+ ┃ ┣ 📜notification-bell.tsx
+ ┃ ┣ 📜reporting-dashboard.tsx
+ ┃ ┣ 📜scorm-player.tsx
+ ┃ ┣ 📜team-progress-dashboard.tsx
+ ┃ ┣ 📜user-management.tsx
+ ┃ ┗ 📜user-modal.tsx
+ ┣ 📂courses
+ ┃ ┣ 📂[id]
+ ┃ ┃ ┣ 📂player
+ ┃ ┃ ┃ ┗ 📜page.tsx
+ ┃ ┃ ┗ 📜page.tsx
+ ┃ ┗ 📜page.tsx
+ ┣ 📂dashboard
+ ┃ ┣ 📜layout.tsx
+ ┃ ┗ 📜page.tsx
+ ┣ 📂learning-paths
+ ┃ ┗ 📜page.tsx
+ ┣ 📂lib
+ ┃ ┣ 📜auth.ts
+ ┃ ┣ 📜auth.types.ts
+ ┃ ┣ 📜blob.ts
+ ┃ ┣ 📜course-reminder-job.ts
+ ┃ ┣ 📜file-upload.ts
+ ┃ ┣ 📜notification-service.ts
+ ┃ ┣ 📜prisma.ts
+ ┃ ┣ 📜report-helpers.ts
+ ┃ ┣ 📜scorm-validator.ts
+ ┃ ┣ 📜utils.ts
+ ┃ ┗ 📜websocket-server.ts
+ ┣ 📂login
+ ┃ ┗ 📜page.tsx
+ ┣ 📂reports
+ ┃ ┗ 📜page.tsx
+ ┣ 📂team-progress
+ ┃ ┗ 📜page.tsx
+ ┣ 📂types
+ ┃ ┣ 📜notifications.ts
+ ┃ ┗ 📜prisma.ts
+ ┣ 📜favicon.ico
+ ┣ 📜globals.css
+ ┣ 📜layout.tsx
+ ┣ 📜page.tsx
+ ┗ 📜providers.tsx
