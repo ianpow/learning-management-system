@@ -1,5 +1,10 @@
 {
-    "version": 2,
-    "buildCommand": "prisma generate && prisma migrate deploy && next build",
-    "regions": ["lhr1"]
+  "version": 2,
+  "buildCommand": "prisma generate && prisma migrate deploy && next build",
+  "regions": ["lhr1"],
+  "functions": {
+    "api/courses/route.ts": {
+      "maxDuration": 60
+    }
   }
+}
