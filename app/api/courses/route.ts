@@ -3,12 +3,17 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { unzip } from 'unzipper'
 import { XMLParser } from 'fast-xml-parser'
 import { uploadFile } from '@/lib/file-upload'
 import { Prisma } from '@prisma/client'
-import type { DirectoryEntry } from 'unzipper'
 
+const unzip = require('unzipper')
+
+interface DirectoryEntry {
+ path: string;
+ type: string;
+ buffer(): Promise<Buffer>;
+}
 interface CourseData {
   title: string
   description: string
@@ -145,11 +150,11 @@ export async function POST(request: Request) {
     }
 
     // Process SCORM package
-    const buffer = Buffer.from(await scormPackage.arrayBuffer())
-    const directory = await unzip.Open.buffer(buffer)
+    const buffer = Buffer.from(await scormPackage.arrayBuffer());
+const directory = await unzip.Open.buffer(buffer);
     
     // Find and parse manifest
-    const manifestFile = directory.files.find(f => f.path.endsWith('imsmanifest.xml'))
+    const manifestFile = directory.files.find((f: DirectoryEntry) => f.path.endsWith('imsmanifest.xml'))
     if (!manifestFile) {
       return NextResponse.json({ error: 'Invalid SCORM package: No manifest file found' }, { status: 400 })
     }
@@ -174,12 +179,12 @@ export async function POST(request: Request) {
 
     // Upload the unzipped content
     const uploadPromises = directory.files
-      .filter(file => file.type !== 'Directory')
-      .map(async file => {
-        const content = await file.buffer()
-        const path = `courses/${courseData.title}/${file.path}`
-        return uploadFile(new File([content], file.path))
-      })
+    .filter((file: DirectoryEntry) => file.type !== 'Directory')
+    .map(async (file: DirectoryEntry) => {
+      const content = await file.buffer()
+      const path = `courses/${courseData.title}/${file.path}`
+      return uploadFile(new File([content], file.path))
+    })
 
     await Promise.all(uploadPromises)
 
