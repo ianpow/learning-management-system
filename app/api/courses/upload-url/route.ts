@@ -2,20 +2,30 @@
 import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
 
-export async function POST(request: Request): Promise<NextResponse> {
+export async function POST(request: Request) {
   try {
-    // Convert the request body stream to a buffer
     const data = await request.arrayBuffer();
-    const buffer = Buffer.from(data);
+    const uploadType = request.headers.get('upload-type'); // 'scorm' or 'thumbnail'
+    const fileName = request.headers.get('file-name') || 'file';
+    
+    const pathname = uploadType === 'scorm' 
+      ? `/lmscontent/scorm/${fileName}`
+      : `/lmscontent/images/${fileName}`;
 
-    // Now we can pass the buffer to put
-    const blob = await put('temp.zip', buffer, {
+    const blob = await put(pathname, data, {
       access: 'public',
-      addRandomSuffix: true
+      addRandomSuffix: true,
+      contentType: uploadType === 'scorm' 
+        ? 'application/zip'
+        : 'image/*'
     });
     
     return NextResponse.json(blob);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to handle upload' }, { status: 500 });
+    console.error('Upload error:', error);
+    return NextResponse.json(
+      { error: 'Failed to handle upload' },
+      { status: 500 }
+    );
   }
 }

@@ -123,7 +123,7 @@ export default function CourseUpload() {
      // Upload SCORM package directly to blob storage
      const { url: scormUrl } = await put(file.name, file, {
       access: 'public',
-      addRandomSuffix: true
+      addRandomSuffix: true,
     });
     
     // Upload thumbnail if provided
