@@ -1,6 +1,6 @@
 // /app/admin/courses/upload/page.tsx
-import CourseUploader from '@/components/course-uploader'
+import CourseUpload from '@/components/admin/course-upload'
 
 export default function CourseUploadPage() {
-  return <CourseUploader />
+  return <CourseUpload />
 }
