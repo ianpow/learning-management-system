@@ -3,22 +3,14 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { XMLParser } from 'fast-xml-parser'
-import { uploadFile } from '@/lib/file-upload'
 import { Prisma } from '@prisma/client'
 
-const unzip = require('unzipper')
-
-interface DirectoryEntry {
- path: string;
- type: string;
- buffer(): Promise<Buffer>;
-}
 interface CourseData {
   title: string
   description: string
   duration_minutes: number
   thumbnail_url?: string
+  scorm_package_url: string
   access_control: {
     departments: number[]
     roles: number[]
@@ -133,83 +125,35 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const formData = await request.formData()
-    const scormPackage = formData.get('scormPackage') as File
-    const thumbnail = formData.get('thumbnail') as File | null
-    const courseData: CourseData = JSON.parse(formData.get('data') as string)
-
+    const data = await request.json()
+    
     // Validate required fields
-    if (!scormPackage || !courseData.title || !courseData.description) {
+    if (!data.title || !data.description || !data.scorm_package_url) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Upload thumbnail if provided
-    let thumbnailUrl = ''
-    if (thumbnail) {
-      thumbnailUrl = await uploadFile(thumbnail)
-    }
-
-    // Process SCORM package
-    const buffer = Buffer.from(await scormPackage.arrayBuffer());
-const directory = await unzip.Open.buffer(buffer);
-    
-    // Find and parse manifest
-    const manifestFile = directory.files.find((f: DirectoryEntry) => f.path.endsWith('imsmanifest.xml'))
-    if (!manifestFile) {
-      return NextResponse.json({ error: 'Invalid SCORM package: No manifest file found' }, { status: 400 })
-    }
-
-    const manifestContent = await manifestFile.buffer()
-    const parser = new XMLParser()
-    const manifest = parser.parse(manifestContent.toString())
-
-    // Validate manifest structure
-    if (!manifest.manifest?.resources?.resource) {
-      return NextResponse.json({ error: 'Invalid SCORM package: Invalid manifest structure' }, { status: 400 })
-    }
-
-    // Get launch URL from manifest
-    const resource = Array.isArray(manifest.manifest.resources.resource)
-      ? manifest.manifest.resources.resource[0]
-      : manifest.manifest.resources.resource
-    const launchUrl = resource.href || resource['@_href']
-    if (!launchUrl) {
-      return NextResponse.json({ error: 'Invalid SCORM package: No launch URL found' }, { status: 400 })
-    }
-
-    // Upload the unzipped content
-    const uploadPromises = directory.files
-    .filter((file: DirectoryEntry) => file.type !== 'Directory')
-    .map(async (file: DirectoryEntry) => {
-      const content = await file.buffer()
-      const path = `courses/${courseData.title}/${file.path}`
-      return uploadFile(new File([content], file.path))
-    })
-
-    await Promise.all(uploadPromises)
-
     // Create course record with access control
     const createData = {
-      title: courseData.title,
-      description: courseData.description,
-      duration_minutes: courseData.duration_minutes,
-      thumbnail_url: thumbnailUrl,
-      scorm_package_url: `courses/${courseData.title}/${launchUrl}`,
+      title: data.title,
+      description: data.description,
+      duration_minutes: data.duration_minutes,
+      thumbnail_url: data.thumbnail_url || '',
+      scorm_package_url: data.scorm_package_url,
       created_by: {
         connect: { id: parseInt(session.user.id) }
       },
       status: 'active',
       access_control: {
         create: [
-          ...courseData.access_control.departments.map(deptId => ({
+          ...data.access_control.departments.map((deptId: number) => ({
             type: 'DEPARTMENT',
             departmentId: deptId
           })),
-          ...courseData.access_control.roles.map(roleId => ({
+          ...data.access_control.roles.map((roleId: number) => ({
             type: 'ROLE',
             roleId: roleId
           })),
-          ...courseData.access_control.locations.map(locId => ({
+          ...data.access_control.locations.map((locId: number) => ({
             type: 'LOCATION',
             locationId: locId
           }))
