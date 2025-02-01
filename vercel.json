@@ -3,7 +3,7 @@
   "buildCommand": "prisma generate && prisma migrate deploy && next build",
   "regions": ["lhr1"],
   "functions": {
-    "api/courses/route.ts": {
+    "app/api/courses/route": {
       "maxDuration": 60
     }
   }
