@@ -2,12 +2,10 @@
 import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
 
-export const config = {
-  api: {
-    bodyParser: false,  // Disable the default body parser
-    bodyLimit: '30mb'   // Set a higher limit
-  }
-};
+// Update config to use the new segment configuration format
+export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
+// Remove the old config export
 
 export async function POST(request: Request) {
   try {
