@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { Upload, AlertCircle, CheckCircle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { put } from '@vercel/blob';
 
 interface Department {
  id: number
@@ -118,20 +119,37 @@ export default function CourseUpload() {
    setError('')
    setSuccess(false)
 
-   const formData = new FormData()
-   formData.append('scormPackage', file)
-   if (thumbnailFile) {
-     formData.append('thumbnail', thumbnailFile)
-   }
-   formData.append('data', JSON.stringify(courseData))
-
    try {
+     // Upload SCORM package directly to blob storage
+     const { url: scormUrl } = await put(file.name, file, {
+      access: 'public',
+      addRandomSuffix: true
+    });
+    
+    // Upload thumbnail if provided
+    let thumbnailUrl = '';
+    if (thumbnailFile) {
+      const { url } = await put(thumbnailFile.name, thumbnailFile, {
+        access: 'public',
+        addRandomSuffix: true
+      });
+      thumbnailUrl = url;
+    }
+
+     // Create course record
+     const formData = new FormData()
+     formData.append('data', JSON.stringify({
+       ...courseData,
+       thumbnail_url: thumbnailUrl,
+       scorm_package_url: scormUrl
+     }))
+
      const response = await fetch('/api/courses', {
        method: 'POST',
        body: formData
      })
 
-     if (!response.ok) throw new Error('Failed to upload course')
+     if (!response.ok) throw new Error('Failed to create course')
      
      setSuccess(true)
      setCourseData({
@@ -149,6 +167,7 @@ export default function CourseUpload() {
      setThumbnailFile(null)
    } catch (err) {
      setError('Failed to upload course')
+     console.error('Upload error:', err)
    } finally {
      setUploading(false)
    }
