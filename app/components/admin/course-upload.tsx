@@ -163,13 +163,24 @@ export default function CourseUpload() {
         scorm_package_url: scormUrl
       }));
   
-      const response = await fetch('/api/courses', {
+      const courseResponse = await fetch('/api/courses', {
         method: 'POST',
-        body: courseFormData
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: courseData.title,
+          description: courseData.description,
+          duration_minutes: courseData.duration_minutes,
+          thumbnail_url: thumbnailUrl,
+          scorm_package_url: scormUrl,
+          access_control: courseData.access_control
+        })
       });
-  
-      if (!response.ok) {
-        throw new Error('Failed to create course');
+      
+      if (!courseResponse.ok) {
+        const errorData = await courseResponse.json();
+        throw new Error(errorData.error || 'Failed to create course');
       }
   
       setSuccess(true);
