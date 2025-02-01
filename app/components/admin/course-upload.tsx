@@ -108,69 +108,71 @@ export default function CourseUpload() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!file) {
-      setError('Please upload a SCORM package')
-      return
+      setError('Please upload a SCORM package');
+      return;
     }
-
-    setUploading(true)
-    setError('')
-    setSuccess(false)
-
+  
+    setUploading(true);
+    setError('');
+    setSuccess(false);
+  
     try {
-      // Upload SCORM package
+      // First handle the SCORM package upload
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('uploadType', 'scorm');
+  
       const scormResponse = await fetch('/api/courses/upload-url', {
         method: 'POST',
-        body: file,
-        headers: {
-          'upload-type': 'scorm',
-          'file-name': file.name
-        }
-      })
-
+        body: formData
+      });
+  
       if (!scormResponse.ok) {
-        throw new Error('Failed to upload SCORM package')
+        throw new Error('Failed to upload SCORM package');
       }
-
-      const { url: scormUrl } = await scormResponse.json()
-
-      // Upload thumbnail if provided
-      let thumbnailUrl = ''
+  
+      const { url: scormUrl } = await scormResponse.json();
+  
+      // Handle thumbnail upload if provided
+      let thumbnailUrl = '';
       if (thumbnailFile) {
+        const thumbnailFormData = new FormData();
+        thumbnailFormData.append('file', thumbnailFile);
+        thumbnailFormData.append('uploadType', 'thumbnail');
+  
         const thumbnailResponse = await fetch('/api/courses/upload-url', {
           method: 'POST',
-          body: thumbnailFile,
-          headers: {
-            'upload-type': 'thumbnail',
-            'file-name': thumbnailFile.name
-          }
-        })
-
+          body: thumbnailFormData
+        });
+  
         if (!thumbnailResponse.ok) {
-          throw new Error('Failed to upload thumbnail')
+          throw new Error('Failed to upload thumbnail');
         }
-
-        const { url } = await thumbnailResponse.json()
-        thumbnailUrl = url
+  
+        const { url } = await thumbnailResponse.json();
+        thumbnailUrl = url;
       }
-
-      // Create course record
-      const formData = new FormData()
-      formData.append('data', JSON.stringify({
+  
+      // Create the course record
+      const courseFormData = new FormData();
+      courseFormData.append('data', JSON.stringify({
         ...courseData,
         thumbnail_url: thumbnailUrl,
         scorm_package_url: scormUrl
-      }))
-
+      }));
+  
       const response = await fetch('/api/courses', {
         method: 'POST',
-        body: formData
-      })
-
-      if (!response.ok) throw new Error('Failed to create course')
-      
-      setSuccess(true)
+        body: courseFormData
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to create course');
+      }
+  
+      setSuccess(true);
       // Reset form
       setCourseData({
         title: '',
@@ -182,16 +184,16 @@ export default function CourseUpload() {
           roles: [],
           locations: []
         }
-      })
-      setFile(null)
-      setThumbnailFile(null)
+      });
+      setFile(null);
+      setThumbnailFile(null);
     } catch (err) {
-      setError('Failed to upload course')
-      console.error('Upload error:', err)
+      console.error('Upload error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to upload course');
     } finally {
-      setUploading(false)
+      setUploading(false);
     }
-  }
+  };
 
   return (
     <div className="max-w-2xl mx-auto">

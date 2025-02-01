@@ -2,9 +2,17 @@
 import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
 
+export const config = {
+  api: {
+    bodyParser: false,  // Disable the default body parser
+    bodyLimit: '30mb'   // Set a higher limit
+  }
+};
+
 export async function POST(request: Request) {
   try {
     const data = await request.arrayBuffer();
+    const contentType = request.headers.get('content-type') || 'application/octet-stream';
     const uploadType = request.headers.get('upload-type'); // 'scorm' or 'thumbnail'
     const fileName = request.headers.get('file-name') || 'file';
     
@@ -12,12 +20,9 @@ export async function POST(request: Request) {
       ? `/lmscontent/scorm/${fileName}`
       : `/lmscontent/images/${fileName}`;
 
-    const blob = await put(pathname, data, {
+    const blob = await put(pathname, new Blob([data], { type: contentType }), {
       access: 'public',
-      addRandomSuffix: true,
-      contentType: uploadType === 'scorm' 
-        ? 'application/zip'
-        : 'image/*'
+      addRandomSuffix: true
     });
     
     return NextResponse.json(blob);
