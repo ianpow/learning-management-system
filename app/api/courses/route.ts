@@ -156,15 +156,15 @@ export async function POST(request: Request) {
         create: [
           ...data.access_control.departments.map((deptId: number) => ({
             type: 'DEPARTMENT',
-            departmentId: deptId
+            department_id: deptId
           })),
           ...data.access_control.roles.map((roleId: number) => ({
             type: 'ROLE',
-            roleId: roleId
+            role_id: roleId
           })),
           ...data.access_control.locations.map((locId: number) => ({
             type: 'LOCATION',
-            locationId: locId
+            location_id: locId
           }))
         ]
       }
