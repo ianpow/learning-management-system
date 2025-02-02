@@ -154,6 +154,46 @@ export default function CourseUpload() {
         const { url } = await thumbnailResponse.json();
         thumbnailUrl = url;
       }
+
+      try {
+        console.log('Course data being sent:', {
+          title: courseData.title,
+          description: courseData.description,
+          duration_minutes: courseData.duration_minutes,
+          thumbnail_url: thumbnailUrl,
+          scorm_package_url: scormUrl,
+          access_control: courseData.access_control
+        });
+      
+        const courseResponse = await fetch('/api/courses', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: courseData.title,
+            description: courseData.description,
+            duration_minutes: courseData.duration_minutes,
+            thumbnail_url: thumbnailUrl,
+            scorm_package_url: scormUrl,
+            access_control: courseData.access_control
+          })
+        });
+      
+        if (!courseResponse.ok) {
+          const errorText = await courseResponse.text();
+          console.error('Server response:', errorText);
+          throw new Error(`Server error: ${errorText}`);
+        }
+      
+        const courseResult = await courseResponse.json();
+        console.log('Course creation result:', courseResult);
+      
+      } catch (err) {
+        console.error('Full error details:', err);
+        setError(err instanceof Error ? err.message : 'Failed to upload course');
+        throw err;
+      }
   
       // Create the course record
       const courseFormData = new FormData();
