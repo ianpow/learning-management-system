@@ -16,15 +16,18 @@ async function main() {
   const departments = await Promise.all([
     prisma.department.create({ data: { name: 'HR' } }),
     prisma.department.create({ data: { name: 'IT' } }),
-    prisma.department.create({ data: { name: 'Sales' } })
+    prisma.department.create({ data: { name: 'Sales' } }),
+    prisma.department.create({ data: { name: 'Customer Service' } }),
+    prisma.department.create({ data: { name: 'Marketing' } })
   ]);
 
   // Create locations
   const locations = await Promise.all([
     prisma.location.create({ data: { name: 'London' } }),
     prisma.location.create({ data: { name: 'New York' } }),
-    prisma.location.create({ data: { name: 'Singapore' } })
-  ]);
+    prisma.location.create({ data: { name: 'Singapore' } }),
+    prisma.location.create({ data: { name: 'Dalgety Bay' } })
+      ]);
 
   // Create admin user
   const hashedPassword = await bcrypt.hash('admin123', 10);
