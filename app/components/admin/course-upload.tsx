@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react'
 import { Upload, AlertCircle, CheckCircle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { put } from '@vercel/blob'
 
 interface Department {
   id: number
@@ -121,18 +120,38 @@ export default function CourseUpload() {
 
     try {
       // Upload SCORM package
-      const { url: scormUrl } = await put(`lmscontent/scorm/${file.name}`, file, {
-        access: 'public',
-        addRandomSuffix: true,
+      const scormResponse = await fetch('/api/courses/upload-url', {
+        method: 'POST',
+        body: file,
+        headers: {
+          'upload-type': 'scorm',
+          'file-name': file.name
+        }
       })
+
+      if (!scormResponse.ok) {
+        throw new Error('Failed to upload SCORM package')
+      }
+
+      const { url: scormUrl } = await scormResponse.json()
 
       // Upload thumbnail if provided
       let thumbnailUrl = ''
       if (thumbnailFile) {
-        const { url } = await put(`lmscontent/images/${thumbnailFile.name}`, thumbnailFile, {
-          access: 'public',
-          addRandomSuffix: true,
+        const thumbnailResponse = await fetch('/api/courses/upload-url', {
+          method: 'POST',
+          body: thumbnailFile,
+          headers: {
+            'upload-type': 'thumbnail',
+            'file-name': thumbnailFile.name
+          }
         })
+
+        if (!thumbnailResponse.ok) {
+          throw new Error('Failed to upload thumbnail')
+        }
+
+        const { url } = await thumbnailResponse.json()
         thumbnailUrl = url
       }
 
