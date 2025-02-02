@@ -120,6 +120,7 @@ export default function CourseUpload() {
 
     try {
       // Upload SCORM package
+      console.log('Uploading SCORM package...');
       const scormResponse = await fetch('/api/courses/upload-url', {
         method: 'POST',
         body: file,
@@ -130,14 +131,18 @@ export default function CourseUpload() {
       })
 
       if (!scormResponse.ok) {
+        const scormError = await scormResponse.text()
+        console.error('SCORM upload error:', scormError)
         throw new Error('Failed to upload SCORM package')
       }
 
       const { url: scormUrl } = await scormResponse.json()
+      console.log('SCORM URL:', scormUrl)
 
       // Upload thumbnail if provided
       let thumbnailUrl = ''
       if (thumbnailFile) {
+        console.log('Uploading thumbnail...')
         const thumbnailResponse = await fetch('/api/courses/upload-url', {
           method: 'POST',
           body: thumbnailFile,
@@ -148,12 +153,31 @@ export default function CourseUpload() {
         })
 
         if (!thumbnailResponse.ok) {
+          const thumbnailError = await thumbnailResponse.text()
+          console.error('Thumbnail upload error:', thumbnailError)
           throw new Error('Failed to upload thumbnail')
         }
 
         const { url } = await thumbnailResponse.json()
         thumbnailUrl = url
+        console.log('Thumbnail URL:', thumbnailUrl)
       }
+
+      // Prepare course data
+      const submitData = {
+        title: courseData.title,
+        description: courseData.description,
+        duration_minutes: courseData.duration_minutes,
+        thumbnail_url: thumbnailUrl,
+        scorm_package_url: scormUrl,
+        access_control: {
+          departments: Array.from(courseData.access_control.departments),
+          roles: Array.from(courseData.access_control.roles),
+          locations: Array.from(courseData.access_control.locations)
+        }
+      }
+
+      console.log('Submitting course data:', submitData)
 
       // Create course record
       const courseResponse = await fetch('/api/courses', {
@@ -161,24 +185,17 @@ export default function CourseUpload() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          title: courseData.title,
-          description: courseData.description,
-          duration_minutes: courseData.duration_minutes,
-          thumbnail_url: thumbnailUrl,
-          scorm_package_url: scormUrl,
-          access_control: {
-            departments: Array.from(courseData.access_control.departments),
-            roles: Array.from(courseData.access_control.roles),
-            locations: Array.from(courseData.access_control.locations)
-          }
-        })
+        body: JSON.stringify(submitData)
       })
 
       if (!courseResponse.ok) {
-        const errorData = await courseResponse.json()
-        throw new Error(errorData.error || 'Failed to create course')
+        const errorData = await courseResponse.text()
+        console.error('Course creation error:', errorData)
+        throw new Error(errorData || 'Failed to create course')
       }
+
+      const courseResult = await courseResponse.json()
+      console.log('Course created:', courseResult)
 
       setSuccess(true)
       // Reset form
@@ -196,7 +213,7 @@ export default function CourseUpload() {
       setFile(null)
       setThumbnailFile(null)
     } catch (err) {
-      console.error('Upload error:', err)
+      console.error('Full upload error:', err)
       setError(err instanceof Error ? err.message : 'Failed to upload course')
     } finally {
       setUploading(false)

@@ -120,15 +120,24 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    console.log('Starting POST request processing');
+    
     const session = await getServerSession(authOptions)
     if (!session?.user?.role || session.user.role !== 'admin') {
+      console.log('Authorization failed:', session?.user);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const data = await request.json()
-    
+    console.log('Received request data:', data);
+
     // Validate required fields
     if (!data.title || !data.description || !data.scorm_package_url) {
+      console.log('Missing required fields:', {
+        title: !!data.title,
+        description: !!data.description,
+        scorm_package_url: !!data.scorm_package_url
+      });
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
@@ -161,16 +170,35 @@ export async function POST(request: Request) {
       }
     }
 
-    const course = await prisma.course.create({
-      data: createData,
-      include: {
-        enrollments: true
-      }
-    })
+    console.log('Attempting to create course with data:', createData);
 
-    return NextResponse.json(course)
+    try {
+      const course = await prisma.course.create({
+        data: createData,
+        include: {
+          enrollments: true
+        }
+      })
+      console.log('Course created successfully:', course);
+      return NextResponse.json(course)
+    } catch (prismaError) {
+      console.error('Prisma error during course creation:', prismaError);
+      if (prismaError instanceof Prisma.PrismaClientKnownRequestError) {
+        console.error('Prisma error code:', prismaError.code);
+        console.error('Prisma error meta:', prismaError.meta);
+      }
+      return NextResponse.json({ 
+        error: 'Database error', 
+        details: prismaError,
+        message: prismaError instanceof Error ? prismaError.message : 'Unknown error'
+      }, { status: 500 });
+    }
   } catch (error) {
     console.error('Course upload error:', error)
-    return NextResponse.json({ error: 'Failed to upload course' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Failed to upload course', 
+      details: error,
+      message: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
