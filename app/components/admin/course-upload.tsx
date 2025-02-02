@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { Upload, AlertCircle, CheckCircle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { put } from '@vercel/blob'
 
 interface Department {
   id: number
@@ -108,101 +109,34 @@ export default function CourseUpload() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (!file) {
-      setError('Please upload a SCORM package');
-      return;
+      setError('Please upload a SCORM package')
+      return
     }
-  
-    setUploading(true);
-    setError('');
-    setSuccess(false);
-  
+
+    setUploading(true)
+    setError('')
+    setSuccess(false)
+
     try {
-      // First handle the SCORM package upload
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('uploadType', 'scorm');
-  
-      const scormResponse = await fetch('/api/courses/upload-url', {
-        method: 'POST',
-        body: formData
-      });
-  
-      if (!scormResponse.ok) {
-        throw new Error('Failed to upload SCORM package');
-      }
-  
-      const { url: scormUrl } = await scormResponse.json();
-  
-      // Handle thumbnail upload if provided
-      let thumbnailUrl = '';
+      // Upload SCORM package
+      const { url: scormUrl } = await put(`lmscontent/scorm/${file.name}`, file, {
+        access: 'public',
+        addRandomSuffix: true,
+      })
+
+      // Upload thumbnail if provided
+      let thumbnailUrl = ''
       if (thumbnailFile) {
-        const thumbnailFormData = new FormData();
-        thumbnailFormData.append('file', thumbnailFile);
-        thumbnailFormData.append('uploadType', 'thumbnail');
-  
-        const thumbnailResponse = await fetch('/api/courses/upload-url', {
-          method: 'POST',
-          body: thumbnailFormData
-        });
-  
-        if (!thumbnailResponse.ok) {
-          throw new Error('Failed to upload thumbnail');
-        }
-  
-        const { url } = await thumbnailResponse.json();
-        thumbnailUrl = url;
+        const { url } = await put(`lmscontent/images/${thumbnailFile.name}`, thumbnailFile, {
+          access: 'public',
+          addRandomSuffix: true,
+        })
+        thumbnailUrl = url
       }
 
-      try {
-        console.log('Course data being sent:', {
-          title: courseData.title,
-          description: courseData.description,
-          duration_minutes: courseData.duration_minutes,
-          thumbnail_url: thumbnailUrl,
-          scorm_package_url: scormUrl,
-          access_control: courseData.access_control
-        });
-      
-        const courseResponse = await fetch('/api/courses', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            title: courseData.title,
-            description: courseData.description,
-            duration_minutes: courseData.duration_minutes,
-            thumbnail_url: thumbnailUrl,
-            scorm_package_url: scormUrl,
-            access_control: courseData.access_control
-          })
-        });
-      
-        if (!courseResponse.ok) {
-          const errorText = await courseResponse.text();
-          console.error('Server response:', errorText);
-          throw new Error(`Server error: ${errorText}`);
-        }
-      
-        const courseResult = await courseResponse.json();
-        console.log('Course creation result:', courseResult);
-      
-      } catch (err) {
-        console.error('Full error details:', err);
-        setError(err instanceof Error ? err.message : 'Failed to upload course');
-        throw err;
-      }
-  
-      // Create the course record
-      const courseFormData = new FormData();
-      courseFormData.append('data', JSON.stringify({
-        ...courseData,
-        thumbnail_url: thumbnailUrl,
-        scorm_package_url: scormUrl
-      }));
-  
+      // Create course record
       const courseResponse = await fetch('/api/courses', {
         method: 'POST',
         headers: {
@@ -214,16 +148,20 @@ export default function CourseUpload() {
           duration_minutes: courseData.duration_minutes,
           thumbnail_url: thumbnailUrl,
           scorm_package_url: scormUrl,
-          access_control: courseData.access_control
+          access_control: {
+            departments: Array.from(courseData.access_control.departments),
+            roles: Array.from(courseData.access_control.roles),
+            locations: Array.from(courseData.access_control.locations)
+          }
         })
-      });
-      
+      })
+
       if (!courseResponse.ok) {
-        const errorData = await courseResponse.json();
-        throw new Error(errorData.error || 'Failed to create course');
+        const errorData = await courseResponse.json()
+        throw new Error(errorData.error || 'Failed to create course')
       }
-  
-      setSuccess(true);
+
+      setSuccess(true)
       // Reset form
       setCourseData({
         title: '',
@@ -235,16 +173,16 @@ export default function CourseUpload() {
           roles: [],
           locations: []
         }
-      });
-      setFile(null);
-      setThumbnailFile(null);
+      })
+      setFile(null)
+      setThumbnailFile(null)
     } catch (err) {
-      console.error('Upload error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to upload course');
+      console.error('Upload error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to upload course')
     } finally {
-      setUploading(false);
+      setUploading(false)
     }
-  };
+  }
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -319,7 +257,7 @@ export default function CourseUpload() {
               }}
             >
               {departments.map(dept => (
-                <option key={dept.id} value={dept.id.toString()}>
+                <option key={dept.id} value={dept.id}>
                   {dept.name}
                 </option>
               ))}
@@ -346,7 +284,7 @@ export default function CourseUpload() {
               }}
             >
               {roles.map(role => (
-                <option key={role.id} value={role.id.toString()}>
+                <option key={role.id} value={role.id}>
                   {role.name}
                 </option>
               ))}
@@ -372,7 +310,7 @@ export default function CourseUpload() {
               }}
             >
               {locations.map(loc => (
-                <option key={loc.id} value={loc.id.toString()}>
+                <option key={loc.id} value={loc.id}>
                   {loc.name}
                 </option>
               ))}
