@@ -54,7 +54,7 @@ export async function GET(request: Request) {
           OR: [
             { department_id: user.department_id },
             {
-              access_control: {
+              CourseAccess: {  // Updated to match schema
                 some: {
                   OR: [
                     { type: 'ROLE', role_id: user.role_id },
@@ -152,7 +152,7 @@ export async function POST(request: Request) {
         connect: { id: parseInt(session.user.id) }
       },
       status: 'active',
-      access_control: {
+      CourseAccess: {  // Changed from access_control to match schema
         create: [
           ...data.access_control.departments.map((deptId: number) => ({
             type: 'DEPARTMENT',
