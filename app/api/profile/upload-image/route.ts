@@ -1,11 +1,12 @@
 import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
@@ -36,7 +37,9 @@ export async function POST(request: Request) {
     // Update user profile in database
     const user = await prisma.user.update({
       where: { email: session.user.email },
-      data: { profileImage: blob.url },
+      data: {
+        profileImage: blob.url || null
+      },
     });
 
     return NextResponse.json({ url: blob.url });

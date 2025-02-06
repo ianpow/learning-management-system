@@ -1,11 +1,30 @@
 // /app/lib/auth.ts
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { PrismaClient } from "@prisma/client"
 import bcrypt from "bcrypt"
 import './auth.types'
+import { prisma } from '@/lib/prisma'
 
-const prisma = new PrismaClient()
+interface DbUser {
+  id: number;
+  email: string;
+  password_hash: string;
+  first_name: string;
+  last_name: string;
+  role_id: number;
+  department_id: number;
+  location_id: number;
+  manager_id: number | null;
+  profileImage: string | null;
+  created_at: Date;
+  updated_at: Date;
+  role: {
+    id: number;
+    name: string;
+    created_at: Date;
+    updated_at: Date;
+  }
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -20,10 +39,10 @@ export const authOptions: NextAuthOptions = {
           return null
         }
       
-        const user = await prisma.user.findUnique({
+        const user: DbUser | null = await prisma.user.findUnique({
           where: { email: credentials.email },
           include: { role: true }
-        })
+        }) as (typeof user & { profile_image: string | null })
       
         if (!user) {
           return null
@@ -45,7 +64,7 @@ export const authOptions: NextAuthOptions = {
           last_name: user.last_name,
           name: `${user.first_name} ${user.last_name}`,
           role: user.role.name,
-          profileImage: user.profileImage || null
+          profileImage: user.profileImage || undefined
         }
       }
     })
@@ -59,7 +78,7 @@ export const authOptions: NextAuthOptions = {
           role: user.role,
           first_name: user.first_name,
           last_name: user.last_name,
-          profileImage: user.profileImage
+          profileImage: user.profileImage || undefined
         }
       }
       return token
@@ -73,7 +92,7 @@ export const authOptions: NextAuthOptions = {
           role: token.role,
           first_name: token.first_name,
           last_name: token.last_name,
-          profileImage: token.profileImage
+          profileImage: token.profileImage || undefined
         }
       }
     }
