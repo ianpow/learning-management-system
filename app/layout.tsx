@@ -2,7 +2,6 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter as FontSans } from 'next/font/google'
-import DashboardLayout from './components/dashboard-ui'
 import { Providers } from './providers'
 
 const fontSans = FontSans({
@@ -26,9 +25,7 @@ export default function RootLayout({
       <head />
       <body className={`min-h-screen bg-background font-sans antialiased ${fontSans.variable}`}>
         <Providers>
-          <DashboardLayout>
-            {children}
-          </DashboardLayout>
+          {children}
         </Providers>
       </body>
     </html>
