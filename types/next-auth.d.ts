@@ -7,7 +7,7 @@ declare module "next-auth" {
     first_name: string
     last_name: string
     role: string
-    profile_image?: string
+    profileImage?: string
   }
 
   interface Session {
@@ -17,7 +17,7 @@ declare module "next-auth" {
       first_name: string
       last_name: string
       role: string
-      profile_image?: string
+      profileImage?: string
     }
   }
 }

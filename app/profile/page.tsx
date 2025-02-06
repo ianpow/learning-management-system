@@ -61,7 +61,7 @@ export default function ProfilePage() {
           ...session,
           user: {
             ...session.user,
-            profile_image: data.url,
+            profileImage: data.url,
           },
         });
       }
@@ -81,9 +81,9 @@ export default function ProfilePage() {
         <div className="flex items-start space-x-6">
           <div className="relative">
             <div className="w-[300px] h-[300px] rounded-lg border-2 border-gray-200 overflow-hidden relative bg-gray-50">
-              {(previewUrl || session?.user?.profile_image) ? (
+              {(previewUrl || session?.user?.profileImage) ? (
                 <Image
-                  src={previewUrl || session?.user?.profile_image || ''}
+                  src={previewUrl || session?.user?.profileImage || ''}
                   alt="Profile"
                   fill
                   className="object-cover"

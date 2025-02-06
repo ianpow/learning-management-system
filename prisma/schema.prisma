@@ -18,7 +18,7 @@ model User {
   department_id Int
   location_id   Int
   manager_id    Int?
-  profile_image String?   // Added profile image field
+  profileImage  String?   // Changed from profile_image to profileImage
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
 

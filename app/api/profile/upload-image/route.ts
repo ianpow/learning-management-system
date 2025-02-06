@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     // Update user profile in database
     const user = await prisma.user.update({
       where: { email: session.user.email },
-      data: { profile_image: blob.url },
+      data: { profileImage: blob.url },
     });
 
     return NextResponse.json({ url: blob.url });
